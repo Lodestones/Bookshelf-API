@@ -2,21 +2,29 @@
 Bookshelf API allows you to hook into the Bookshelf Plugin to access quality of life managers that you can integrate into your plugin.<br>
 
 The Bookshelf API also provides utility classes that you can use such as:
-- Menu Builders
-- Cooldown Manager
-- Creating Events
-  - BaseEvent
+- [Creating Custom Menus](https://github.com/Lodestones/Bookshelf/tree/master/docs/menu_builder.md)
+- [Utility Classes](https://github.com/Lodestones/Bookshelf/tree/master/src/main/java/to/lodestone/bookshelfapi/api/util)
+  - [ArrayUtil](https://github.com/Lodestones/Bookshelf/blob/master/src/main/java/to/lodestone/bookshelfapi/api/util/ArrayUtil.java)
+  - [ByteUtil](https://github.com/Lodestones/Bookshelf/blob/master/src/main/java/to/lodestone/bookshelfapi/api/util/ByteUtil.java)
+  - [EnumUtil](https://github.com/Lodestones/Bookshelf/blob/master/src/main/java/to/lodestone/bookshelfapi/api/util/EnumUtil.java)
+  - [LocationUtil](https://github.com/Lodestones/Bookshelf/blob/master/src/main/java/to/lodestone/bookshelfapi/api/util/LocationUtil.java)
+  - [MiniMessageUtil](https://github.com/Lodestones/Bookshelf/blob/master/src/main/java/to/lodestone/bookshelfapi/api/util/MiniMessageUtil.java)
+    - Kyori Adventure Utility
+    - Centering Messages
+    - Converting MiniMessage to Components
+    - Persisting Component Styles
+  - [PackUtil](https://github.com/Lodestones/Bookshelf/blob/master/src/main/java/to/lodestone/bookshelfapi/api/util/PackUtil.java)
+  - [StringUtil](https://github.com/Lodestones/Bookshelf/blob/master/src/main/java/to/lodestone/bookshelfapi/api/util/StringUtil.java)
+  - [WorldUtil](https://github.com/Lodestones/Bookshelf/blob/master/src/main/java/to/lodestone/bookshelfapi/api/util/WorldUtil.java)
+- [Cooldown Manager](https://github.com/Lodestones/Bookshelf/blob/master/src/main/java/to/lodestone/bookshelfapi/api/manager/ICooldownManager.java)
 - Events
-  - PlayerChatEvent
-- Configuration Manager
-- Task Schedulers
-- Modrinth Version Updater
-- Fetching Players with Mojang API
-- Kyori Adventure Utility
-  - Centering Messages
-  - Converting MiniMessage to Components
-  - Persisting Component Styles
-- CommandAPI Builders 
+  - [Creating Events with BaseEvent](https://github.com/Lodestones/Bookshelf/blob/master/docs/creating_events.md)
+  - [PlayerChatEvent](https://github.com/Lodestones/Bookshelf/blob/master/src/main/java/to/lodestone/bookshelfapi/api/event/PlayerChatEvent.java)
+- [Creating Custom Config Files]((https://github.com/Lodestones/Bookshelf/blob/master/docs/creating_configs.md))
+- [Task Schedulers](https://github.com/Lodestones/Bookshelf/blob/master/src/main/java/to/lodestone/bookshelfapi/api/Task.java)
+- [Modrinth Version Updater](https://github.com/Lodestones/Bookshelf/blob/master/src/main/java/to/lodestone/bookshelfapi/api/VersionUpdater.java)
+- [Fetching Players with Mojang API](https://github.com/Lodestones/Bookshelf/blob/master/src/main/java/to/lodestone/bookshelfapi/api/mojang/MojangProfile.java)
+- [Another CommandAPI Builder](https://github.com/Lodestones/Bookshelf/blob/master/src/main/java/to/lodestone/bookshelfapi/api/command/Command.java)
 
 ## Table of Contents
 1. [Installing the Bookshelf API](#installation)

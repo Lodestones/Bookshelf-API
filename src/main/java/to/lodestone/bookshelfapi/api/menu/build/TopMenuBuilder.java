@@ -27,20 +27,24 @@ public class TopMenuBuilder extends MenuBuilder {
         this.clickActions = new ArrayList<>();
     }
 
-    public void setTitle(Component title) {
+    public TopMenuBuilder setTitle(Component title) {
         this.title = title;
+        return this;
     }
 
-    public void addCloseAction(Consumer<InventoryCloseEvent> consumer) {
+    public TopMenuBuilder addCloseAction(Consumer<InventoryCloseEvent> consumer) {
         this.closeActions.add(consumer);
+        return this;
     }
 
-    public void addOpenAction(Consumer<InventoryOpenEvent> consumer) {
+    public TopMenuBuilder addOpenAction(Consumer<InventoryOpenEvent> consumer) {
         this.openActions.add(consumer);
+        return this;
     }
 
-    public void addClickAction(Consumer<InventoryClickEvent> consumer) {
+    public TopMenuBuilder addClickAction(Consumer<InventoryClickEvent> consumer) {
         this.clickActions.add(consumer);
+        return this;
     }
 
     public TopMenuBuilder setRows(int rows) {
