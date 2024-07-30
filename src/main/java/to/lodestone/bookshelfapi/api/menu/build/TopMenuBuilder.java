@@ -9,7 +9,9 @@ import org.bukkit.inventory.ItemStack;
 import to.lodestone.bookshelfapi.api.util.MiniMessageUtil;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 public class TopMenuBuilder extends MenuBuilder {
@@ -18,10 +20,11 @@ public class TopMenuBuilder extends MenuBuilder {
     private int rows;
 
     protected List<Consumer<InventoryCloseEvent>> closeActions;
-    protected List<Consumer<InventoryOpenEvent>> openActions;
+    protected List<Consumer<Void>> openActions;
     protected List<Consumer<InventoryClickEvent>> clickActions;
 
     public TopMenuBuilder() {
+        super();
         this.closeActions = new ArrayList<>();
         this.openActions = new ArrayList<>();
         this.clickActions = new ArrayList<>();
@@ -37,7 +40,7 @@ public class TopMenuBuilder extends MenuBuilder {
         return this;
     }
 
-    public TopMenuBuilder addOpenAction(Consumer<InventoryOpenEvent> consumer) {
+    public TopMenuBuilder addOpenAction(Consumer<Void> consumer) {
         this.openActions.add(consumer);
         return this;
     }
@@ -57,10 +60,6 @@ public class TopMenuBuilder extends MenuBuilder {
     }
 
     public TopMenuBuilder outline(ItemStack outlineItem) {
-        if (this.rowBuilders == null) {
-            throw new IllegalArgumentException("Use TopMenuBuilder#setRows before using this method!");
-        }
-
         // Add top components to the top and bottom edges
         for (int y = 0; y < rows; y++) {
             int finalY = y;
@@ -76,10 +75,6 @@ public class TopMenuBuilder extends MenuBuilder {
     }
 
     public TopMenuBuilder fill(ItemStack fillContent) {
-        if (this.rowBuilders == null) {
-            throw new IllegalArgumentException("Use TopMenuBuilder#setRows before using this method!");
-        }
-
         for (int y = 0; y < rows; y++) {
             buildRow(y, rowBuilder -> {
                 for (int x = 0; x < 9; x++) {
@@ -98,10 +93,6 @@ public class TopMenuBuilder extends MenuBuilder {
 
     @Override
     public TopMenuBuilder buildRow(int index, Consumer<RowBuilder> consumer) {
-        if (this.rowBuilders == null) {
-            throw new IllegalArgumentException("Use TopMenuBuilder#setRows before using this method!");
-        }
-
         if ((rows > 6 || rows <= 0) || index > rows)
             throw new IllegalArgumentException(String.format("Invalid row size! Must be inserting from 1-%s", rows));
 
@@ -121,10 +112,6 @@ public class TopMenuBuilder extends MenuBuilder {
     }
 
     public TopMenuBuilder insertInRow(int rowIndex, int slot, ItemStack itemStack, Consumer<InventoryClickEvent> consumer) {
-        if (this.rowBuilders == null) {
-            throw new IllegalArgumentException("Use TopMenuBuilder#setRows before using this method!");
-        }
-
         if ((rows > 6 || rows <= 0) || rowIndex > rows - 1)
             throw new IllegalArgumentException(String.format("Invalid row size! Must be inserting from 1-%s", rows));
 
@@ -136,7 +123,7 @@ public class TopMenuBuilder extends MenuBuilder {
         return title;
     }
 
-    public List<Consumer<InventoryOpenEvent>> getOpenActions() {
+    public List<Consumer<Void>> getOpenActions() {
         return openActions;
     }
 

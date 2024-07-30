@@ -1,8 +1,15 @@
 package to.lodestone.bookshelfapi.api.command;
 
+import dev.jorel.commandapi.BukkitExecutable;
+import dev.jorel.commandapi.CommandAPIBukkit;
 import dev.jorel.commandapi.CommandAPICommand;
 import dev.jorel.commandapi.arguments.Argument;
+import dev.jorel.commandapi.commandsenders.BukkitCommandSender;
+import dev.jorel.commandapi.exceptions.WrapperCommandSyntaxException;
 import dev.jorel.commandapi.executors.*;
+import org.bukkit.command.CommandSender;
+
+import java.util.function.Predicate;
 
 public class Command {
 
@@ -11,6 +18,21 @@ public class Command {
     public Command(String name) {
         this.name = name;
         this.command = new CommandAPICommand(name);
+    }
+
+    public Command withRequirement(Predicate<CommandSender> requirement) {
+        this.command.withRequirement(requirement);
+        return this;
+    }
+
+    public Command executes(final CommandExecutor executor, ExecutorType... types) {
+        this.command.executes(executor, types);
+        return this;
+    }
+
+    public Command executes(final CommandExecutionInfo executor, ExecutorType... types) {
+        this.command.executes(executor, types);
+        return this;
     }
 
     public Command executes(final ResultingCommandExecutionInfo executor) {

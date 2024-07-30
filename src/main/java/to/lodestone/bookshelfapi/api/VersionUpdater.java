@@ -8,7 +8,9 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.json.JSONArray;
 import org.json.JSONObject;
+import to.lodestone.bookshelfapi.api.util.MiniMessageUtil;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -49,9 +51,9 @@ public class VersionUpdater implements Listener {
                 if (this.latestVersion != null) {
                     if (isNewerVersion(this.latestVersion, currentVersion)) {
                         player.sendMessage(Component.empty());
-                        player.sendMessage(MiniMessage.miniMessage().deserialize(String.format("  A newer version of <yellow>%s <reset>is available for download in <green>Modrinth!", name)));
+                        player.sendMessage(MiniMessage.miniMessage().deserialize(String.format("  A newer version of <yellow>%s <reset>is available for download.", name)));
                         player.sendMessage(MiniMessage.miniMessage().deserialize(String.format("  Newest Version: <green>%s <reset>| <reset>Current Version: <yellow>%s", latestVersion, currentVersion)));
-                        player.sendMessage(MiniMessage.miniMessage().deserialize(String.format("  <white>Update %s at <green>Modrinth! <hover:show_text:'<green>Update %s at Modrinth!'><click:open_url:%s/version/%s><underlined><yellow>%s/version/%s", name, name, baseUrl, baseUrl, latestVersion, latestVersion)));
+                        player.sendMessage(MiniMessage.miniMessage().deserialize(String.format("  <white>Update %s at <hover:show_text:'<green>Update %s at Modrinth!'><click:open_url:%s/version/%s><underlined><green>Modrinth!", name, name, baseUrl, latestVersion)));
                         player.sendMessage(Component.empty());
                     }
                 }
@@ -76,8 +78,8 @@ public class VersionUpdater implements Listener {
                 }
                 in.close();
 
-                JSONObject jsonResponse = new JSONObject(response.toString());
-                return jsonResponse.getString("version_number");
+                JSONArray jsonArray = new JSONArray(response.toString());
+                return ((JSONObject) jsonArray.get(0)).getString("version_number");
             } else {
                 plugin.getLogger().severe("=================================");
                 plugin.getLogger().severe(String.format("Failed to retrieve latest version of %s from Modrinth!", name));
@@ -98,14 +100,16 @@ public class VersionUpdater implements Listener {
                 .replace("beta", "")
                 .replace("alpha", "")
                 .replace("private", "")
-                .replace("-v", "")
+                .replace("-", "")
+                .replace("v", "")
                 .split("\\.");
 
         String[] currentParts = currentVersion
                 .replace("beta", "")
                 .replace("alpha", "")
                 .replace("private", "")
-                .replace("-v", "")
+                .replace("-", "")
+                .replace("v", "")
                 .split("\\.");
 
         for (int i = 0; i < latestParts.length; i++) {

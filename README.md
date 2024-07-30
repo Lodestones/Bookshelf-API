@@ -92,7 +92,7 @@ TODO - Documentation Description
 Hooking into the Bookshelf API.
 
 ```java
-import to.lodestone.bookshelfapi.IBookshelfAPI;
+import to.lodestone.bookshelfapi.BookshelfAPI;
 
 public class MainPlugin extends JavaPlugin {
     private BookshelfHook bookshelfHook; // Declare Bookshelf Hook Variable.
@@ -102,7 +102,7 @@ public class MainPlugin extends JavaPlugin {
         bookshelfHook = new BookshelfHook(this); // Hook into the Bookshelf API.       
     }
 
-    public IBookshelfAPI bookshelf() { // use this method to access the Bookshelf API.
+    public BookshelfAPI bookshelf() { // use this method to access the Bookshelf API.
         return bookshelfHook.api(); // Retrieve the Bookshelf API from the Hook.       
     }
 }

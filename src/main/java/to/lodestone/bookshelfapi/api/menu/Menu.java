@@ -6,21 +6,26 @@ import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import to.lodestone.bookshelfapi.BookshelfAPI;
 import to.lodestone.bookshelfapi.api.menu.build.MenuBuilder;
 import to.lodestone.bookshelfapi.api.menu.build.RowBuilder;
 import to.lodestone.bookshelfapi.api.menu.build.TopMenuBuilder;
 
+import java.util.function.Consumer;
+
 public abstract class Menu {
 
-    private final Inventory inventory;
-    private final TopMenuBuilder topMenuBuilder;
-    private final MenuBuilder bottomMenuBuilder;
+    protected Inventory inventory;
+    private TopMenuBuilder topMenuBuilder;
+    private MenuBuilder bottomMenuBuilder;
 
     protected final Player player;
 
     public Menu(Player player) {
         this.player = player;
+    }
 
+    protected void init() {
         this.topMenuBuilder = this.getTopMenuBuilder(new TopMenuBuilder());
         final int rows = this.topMenuBuilder.getRows();
 
@@ -32,7 +37,8 @@ public abstract class Menu {
 
         RowBuilder @NotNull[] rowBuilders = topMenuBuilder.getRowBuilders();
         for (int y = 0; y < rowBuilders.length; y++) {
-            @NotNull RowBuilder rowBuilder = rowBuilders[y];
+            @Nullable RowBuilder rowBuilder = rowBuilders[y];
+            if (rowBuilder == null) continue;
             @NotNull RowBuilder.Slot[] slots = rowBuilder.getSlots();
             for (int x = 0; x < slots.length; x++) {
                 RowBuilder.Slot slot = slots[x];
@@ -49,7 +55,8 @@ public abstract class Menu {
                 throw new IllegalArgumentException("Invalid bottom rows created! Size must be 1-4");
 
             for (int y = 0; y < bottomRowBuilders.length; y++) {
-                @NotNull RowBuilder rowBuilder = bottomRowBuilders[y];
+                @Nullable RowBuilder rowBuilder = bottomRowBuilders[y];
+                if (rowBuilder == null) continue;
                 RowBuilder.Slot @NotNull[] slots = rowBuilder.getSlots();
                 for (int x = 0; x < slots.length; x++) {
                     @NotNull RowBuilder.Slot slot = slots[x];
@@ -62,7 +69,11 @@ public abstract class Menu {
     }
 
     public void open() {
+        if (this.inventory == null || this.topMenuBuilder == null) this.init();
         this.player.openInventory(inventory);
+
+        topMenuBuilder.getOpenActions().forEach(event -> event.accept(null));
+        BookshelfAPI.getApi().getMenuManager().register(player.getUniqueId(), this);
     }
 
     public void close() {

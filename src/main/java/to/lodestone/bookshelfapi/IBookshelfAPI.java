@@ -1,16 +1,11 @@
 package to.lodestone.bookshelfapi;
 
+import to.lodestone.bookshelfapi.api.item.IItemManager;
+import to.lodestone.bookshelfapi.api.manager.IChatManager;
 import to.lodestone.bookshelfapi.api.manager.ICooldownManager;
 import to.lodestone.bookshelfapi.api.menu.IMenuManager;
-import to.lodestone.bookshelfapi.api.internal.Service;
 
-/**
- * Official API of the Bookshelf Plugin
- * This interface allows access to certain internals of the teams plugin.
- *
- * @author John Aquino
- */
-public interface IBookshelfAPI extends Service {
+public interface IBookshelfAPI {
 
     /**
      * Fetches the Menu Manager.
@@ -23,5 +18,17 @@ public interface IBookshelfAPI extends Service {
      * @return The {@link ICooldownManager} instance.
      */
     ICooldownManager getCooldownManager();
+
+    /**
+     * Fetches the Chat Manager.
+     * @return The {@link IChatManager} instance.
+     */
+    IChatManager getChatManager();
+
+    /**
+     * Fetches the Item Manager.
+     * @return The {@link IItemManager} instance.
+     */
+    IItemManager getItemManager();
 
 }
