@@ -28,6 +28,7 @@ public abstract class CustomItem {
 
     public final ItemBuilder getBuilder() throws ClassNotFoundException {
         if (BookshelfAPI.getApi() == null) throw new ClassNotFoundException("Please install Bookshelf to use this method!");
+
         return BookshelfAPI.getApi().getItemManager().getItemBuilderById(id());
     }
 
