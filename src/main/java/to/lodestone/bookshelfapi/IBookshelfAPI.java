@@ -1,6 +1,6 @@
 package to.lodestone.bookshelfapi;
 
-import to.lodestone.bookshelfapi.api.item.IItemManager;
+import to.lodestone.bookshelfapi.api.item.ICustomItemManager;
 import to.lodestone.bookshelfapi.api.manager.IChatManager;
 import to.lodestone.bookshelfapi.api.manager.ICooldownManager;
 import to.lodestone.bookshelfapi.api.menu.IMenuManager;
@@ -27,8 +27,8 @@ public interface IBookshelfAPI {
 
     /**
      * Fetches the Item Manager.
-     * @return The {@link IItemManager} instance.
+     * @return The {@link ICustomItemManager} instance.
      */
-    IItemManager getItemManager();
+    ICustomItemManager getItemManager();
 
 }

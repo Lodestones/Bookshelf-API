@@ -42,7 +42,8 @@ public class ItemBuilder {
     private boolean isUnbreakable = false;
     private String leatherColor;
 
-    private List<NamespacedKey> tags = new ArrayList<>();
+    private final List<NamespacedKey> tags = new ArrayList<>();
+    private final HashMap<NamespacedKey, String> stringTags = new HashMap<>();
     private List<Component> lore;
     private final ArrayList<PotionEffect> potionEffects = new ArrayList<>();
     private final HashMap<Enchantment, Integer> enchantments = new HashMap<>();
@@ -192,7 +193,12 @@ public class ItemBuilder {
     public ItemBuilder tag(NamespacedKey ...key) {
         this.tags.addAll(Arrays.stream(key).toList());
         return this;
-    };
+    }
+
+    public ItemBuilder tag(NamespacedKey key, String value) {
+        this.stringTags.put(key, value);
+        return this;
+    }
 
     public ItemBuilder lore(List<Component> lores) {
         this.lore = lores.stream().map(c -> c.decoration(TextDecoration.ITALIC, false)).toList();
@@ -301,6 +307,7 @@ public class ItemBuilder {
             }
         }
 
+        stringTags.forEach((key, value) -> meta.getPersistentDataContainer().set(key, PersistentDataType.STRING, value));
         tags.forEach(key -> meta.getPersistentDataContainer().set(key, PersistentDataType.BOOLEAN, true));
         if (this.attackSpeed.size() > 0) {
             for (Map.Entry<EquipmentSlot, Double> entry : attackSpeed.entrySet()) {
