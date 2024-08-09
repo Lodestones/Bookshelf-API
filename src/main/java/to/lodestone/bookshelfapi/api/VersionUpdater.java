@@ -96,33 +96,59 @@ public class VersionUpdater implements Listener {
     }
 
     private boolean isNewerVersion(String latestVersion, String currentVersion) {
-        String[] latestParts = latestVersion
-                .replace("beta", "")
-                .replace("alpha", "")
-                .replace("private", "")
-                .replace("-", "")
-                .replace("v", "")
-                .split("\\.");
 
-        String[] currentParts = currentVersion
-                .replace("beta", "")
-                .replace("alpha", "")
-                .replace("private", "")
-                .replace("-", "")
-                .replace("v", "")
-                .split("\\.");
+        // Unfortunately, we would have to support old versions.
+        // Will be deprecated before v1.1.0
+        latestVersion = latestVersion
+                .replaceAll("beta", "")
+                .replaceAll("alpha", "")
+                .replaceAll("private", "")
+                .replaceAll("-", "")
+                .replaceAll("v", "");
 
-        for (int i = 0; i < latestParts.length; i++) {
-            int latestPart = Integer.parseInt(latestParts[i]);
-            int currentPart = Integer.parseInt(currentParts[i]);
+        currentVersion = currentVersion
+                .replaceAll("beta", "")
+                .replaceAll("alpha", "")
+                .replaceAll("private", "")
+                .replaceAll("-", "")
+                .replaceAll("v", "");
+
+        String[] latestParts = latestVersion.split("\\+")[0].split("-");
+        String[] currentParts = currentVersion.split("\\+")[0].split("-");
+
+        String[] latestVersionParts = latestParts[0].split("\\.");
+        String[] currentVersionParts = currentParts[0].split("\\.");
+
+        int maxLength = Math.max(latestVersionParts.length, currentVersionParts.length);
+
+        for (int i = 0; i < maxLength; i++) {
+            int latestPart = i < latestVersionParts.length ? Integer.parseInt(latestVersionParts[i]) : 0;
+            int currentPart = i < currentVersionParts.length ? Integer.parseInt(currentVersionParts[i]) : 0;
 
             if (latestPart > currentPart) {
                 return true;
-            } else if (latestPart < currentPart) {
+            }
+
+            if (latestPart < currentPart) {
                 return false;
             }
         }
-        return false; // versions are equal
+
+        // Handle pre-release versions (e.g., 1.0.0-alpha)
+        if (latestParts.length > 1 && currentParts.length == 1) {
+            // A pre-release version is always less than a final version
+            return false;
+        }
+        if (currentParts.length > 1 && latestParts.length == 1) {
+            // A final version is always greater than a pre-release version
+            return true;
+        }
+        if (latestParts.length > 1 && currentParts.length > 1) {
+            // Compare pre-release versions lexicographically
+            return latestParts[1].compareTo(currentParts[1]) > 0;
+        }
+
+        return false;
     }
 
 }
