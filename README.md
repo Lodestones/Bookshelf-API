@@ -62,7 +62,7 @@ Add it in your root build.gradle at the end of repositories:
 Add the dependency
 ```java
     dependencies {
-        implementation 'com.github.Lodestones:Bookshelf:beta-v1.0.5'
+        implementation 'com.github.Lodestones:Bookshelf:beta-v1.0.6'
     }
 ```
 ## Maven
@@ -80,7 +80,7 @@ Add the dependency
     <dependency>
         <groupId>com.github.Lodestones</groupId>
         <artifactId>Bookshelf</artifactId>
-        <version>beta-v1.0.5</version>
+        <version>beta-v1.0.6</version>
     </dependency>
 ```
 
