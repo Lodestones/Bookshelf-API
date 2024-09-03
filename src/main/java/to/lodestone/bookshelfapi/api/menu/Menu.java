@@ -69,6 +69,8 @@ public abstract class Menu {
     }
 
     public void open() {
+        player.closeInventory(InventoryCloseEvent.Reason.PLUGIN);
+
         if (this.inventory == null || this.topMenuBuilder == null) this.init();
         this.player.openInventory(inventory);
 

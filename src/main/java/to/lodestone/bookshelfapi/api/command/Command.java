@@ -3,6 +3,7 @@ package to.lodestone.bookshelfapi.api.command;
 import dev.jorel.commandapi.BukkitExecutable;
 import dev.jorel.commandapi.CommandAPIBukkit;
 import dev.jorel.commandapi.CommandAPICommand;
+import dev.jorel.commandapi.CommandTree;
 import dev.jorel.commandapi.arguments.Argument;
 import dev.jorel.commandapi.commandsenders.BukkitCommandSender;
 import dev.jorel.commandapi.exceptions.WrapperCommandSyntaxException;

@@ -1,17 +1,13 @@
 package to.lodestone.bookshelfapi.api.menu.build;
 
 import net.kyori.adventure.text.Component;
-import org.bukkit.Material;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
-import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.inventory.ItemStack;
 import to.lodestone.bookshelfapi.api.util.MiniMessageUtil;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Consumer;
 
 public class TopMenuBuilder extends MenuBuilder {
@@ -56,6 +52,7 @@ public class TopMenuBuilder extends MenuBuilder {
 
         this.rows = rows;
         this.rowBuilders = new RowBuilder[rows];
+        for (int i = 0; i < rows; i++) this.rowBuilders[i] = new RowBuilder();
         return this;
     }
 
@@ -100,6 +97,7 @@ public class TopMenuBuilder extends MenuBuilder {
     }
 
     public TopMenuBuilder editRow(int rowIndex, Consumer<RowBuilder> consumer) {
+        if (this.rowBuilders.length < rowIndex) throw new IllegalArgumentException("Invalid row index! Must be from 0-" + (this.rowBuilders.length - 1));
         consumer.accept(this.rowBuilders[rowIndex]);
         return this;
     }

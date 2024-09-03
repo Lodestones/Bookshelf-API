@@ -62,7 +62,7 @@ Add it in your root build.gradle at the end of repositories:
 Add the dependency
 ```java
     dependencies {
-        implementation 'com.github.Lodestones:Bookshelf:beta-v1.0.0'
+        implementation 'com.github.Lodestones:Bookshelf:beta-v1.0.5'
     }
 ```
 ## Maven
@@ -80,31 +80,29 @@ Add the dependency
     <dependency>
         <groupId>com.github.Lodestones</groupId>
         <artifactId>Bookshelf</artifactId>
-        <version>beta-v1.0.0</version>
+        <version>beta-v1.0.5</version>
     </dependency>
 ```
 
 # Documentation
-## API
-TODO - Documentation Description
 
 ## Usage
 Hooking into the Bookshelf API.
 
 ```java
 import to.lodestone.bookshelfapi.BookshelfAPI;
+import to.lodestone.bookshelfapi.IBookshelfAPI;
 
 public class MainPlugin extends JavaPlugin {
-    private BookshelfHook bookshelfHook; // Declare Bookshelf Hook Variable.
 
-    @Override
-    public void onEnable() {
-        bookshelfHook = new BookshelfHook(this); // Hook into the Bookshelf API.       
-    }
+  @Override
+  public void onEnable() {
 
-    public BookshelfAPI bookshelf() { // use this method to access the Bookshelf API.
-        return bookshelfHook.api(); // Retrieve the Bookshelf API from the Hook.       
-    }
+  }
+
+  public IBookshelfAPI bookshelf() { // use this method to access the Bookshelf API.
+    return BookshelfAPI.getApi(); // Retrieve the Bookshelf API instance.       
+  }
 }
 ```
 
