@@ -1,26 +1,25 @@
 package to.lodestone.bookshelfapi.api;
 
 import org.bukkit.event.Listener;
-import org.jetbrains.annotations.Nullable;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-public class KofiManager implements Listener {
-    private final static String URL = "https://lodestone.to/api/ko-fi/verify";
+public class PremiumManager implements Listener {
+    private final static String URL = "https://lodestone.to/api/premium/verify";
 
-    private final boolean isKofiDonor;
+    private final boolean isPremiumServer;
 
-    public KofiManager(@Nullable String email) {
-        this.isKofiDonor = email != null && isKofiDonor(URL + String.format("?email=%s", email));
+    public PremiumManager(String ip) {
+        this.isPremiumServer = isPremiumServer(URL + String.format("?ip=%s", ip));
     }
 
-    public boolean isKofiDonor() {
-        return isKofiDonor;
+    public boolean isPremiumServer() {
+        return isPremiumServer;
     }
 
     @SuppressWarnings("deprecation")
-    private boolean isKofiDonor(String urlString) {
+    private boolean isPremiumServer(String urlString) {
         try {
             URL url = new URL(urlString);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
