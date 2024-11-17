@@ -12,10 +12,7 @@ import to.lodestone.bookshelfapi.api.util.MiniMessageUtil;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * A utility class that can retrieve a {@link YamlConfiguration} file.
@@ -77,6 +74,14 @@ public class Configuration {
         }
     }
 
+    public @NotNull Set<String> getKeys(boolean deep) {
+        return config.getKeys(deep);
+    }
+
+    public @NotNull Map<String, Object> getValues(boolean deep) {
+        return config.getValues(deep);
+    }
+    
     public void set(@NotNull String path, @Nullable Object value) {
         config.set(path, value);
     }
@@ -87,6 +92,108 @@ public class Configuration {
 
     public @Nullable Object get(@NotNull String path) {
         return get(path, null);
+    }
+
+    public double getDouble(@NotNull String path) {
+        return getDouble(path, 0.0);
+    }
+
+    public double getDouble(@NotNull String path, double def) {
+        return config.getDouble(path, def);
+    }
+
+    public boolean contains(@NotNull String path) {
+        return config.contains(path);
+    }
+
+    public boolean isSet(@NotNull String path) {
+        return config.isSet(path);
+    }
+
+    public @NotNull List<Integer> getIntegerList(@NotNull String path) {
+        return config.getIntegerList(path);
+    }
+
+    public @NotNull List<Long> getLongList(@NotNull String path) {
+        return config.getLongList(path);
+    }
+
+    public @NotNull List<?> getList(@NotNull String path, @NotNull List<?> def) {
+        return config.getList(path, def);
+    }
+
+    public boolean isDouble(@NotNull String path) {
+        return config.isDouble(path);
+    }
+
+    public boolean isInt(@NotNull String path) {
+        return config.isInt(path);
+    }
+
+    public boolean isLong(@NotNull String path) {
+        return config.isLong(path);
+    }
+
+    public boolean isBoolean(@NotNull String path) {
+        return config.isBoolean(path);
+    }
+
+    public boolean isString(@NotNull String path) {
+        return config.isString(path);
+    }
+
+    public boolean isList(@NotNull String path) {
+        return config.isList(path);
+    }
+
+    public boolean isConfigurationSection(@NotNull String path) {
+        return config.isConfigurationSection(path);
+    }
+
+    public boolean isOfflinePlayer(@NotNull String path) {
+        return config.isOfflinePlayer(path);
+    }
+
+    public boolean isItemStack(@NotNull String path) {
+        return config.isItemStack(path);
+    }
+
+    public boolean isColor(@NotNull String path) {
+        return config.isColor(path);
+    }
+
+    public boolean isLocation(@NotNull String path) {
+        return config.isLocation(path);
+    }
+
+    public boolean isVector(@NotNull String path) {
+        return config.isVector(path);
+    }
+
+    public void addDefault(@NotNull String path, @Nullable Object value) {
+        config.addDefault(path, value);
+    }
+
+    public void setDefaults(@NotNull org.bukkit.configuration.Configuration defaults) {
+        config.setDefaults(defaults);
+    }
+
+    public void setDefaults(@NotNull YamlConfiguration defaults) {
+        config.setDefaults(defaults);
+    }
+
+    public void setDefaults(@NotNull Configuration defaults) {
+        config.setDefaults(defaults.get());
+    }
+
+    public void setDefaults(@NotNull File defaults) {
+        YamlConfiguration yamlConfiguration = new YamlConfiguration();
+        try {
+            yamlConfiguration.load(defaults);
+        } catch (IOException | InvalidConfigurationException e) {
+            e.printStackTrace();
+        }
+        config.setDefaults(yamlConfiguration);
     }
 
     @Contract("_, !null -> !null")
@@ -122,6 +229,7 @@ public class Configuration {
         return getString(path, null);
     }
 
+    @Contract("_, !null -> !null")
     public @Nullable String getString(@NotNull String path, @Nullable String def) {
         return config.getString(path, def);
     }
