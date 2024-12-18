@@ -69,13 +69,11 @@ public abstract class Menu {
     }
 
     public void open() {
-        player.closeInventory(InventoryCloseEvent.Reason.PLUGIN);
-
         if (this.inventory == null || this.topMenuBuilder == null) this.init();
-        this.player.openInventory(inventory);
-
         topMenuBuilder.getOpenActions().forEach(event -> event.accept(null));
+
         BookshelfAPI.getApi().getMenuManager().register(player.getUniqueId(), this);
+        player.openInventory(this.inventory);
     }
 
     public void close() {
