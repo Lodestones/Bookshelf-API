@@ -3,7 +3,7 @@ package to.lodestone.bookshelfapi;
 import to.lodestone.bookshelfapi.api.item.ICustomItemManager;
 import to.lodestone.bookshelfapi.api.manager.IChatManager;
 import to.lodestone.bookshelfapi.api.manager.ICooldownManager;
-import to.lodestone.bookshelfapi.api.manager.IGameManager;
+import to.lodestone.bookshelfapi.api.manager.IServerManager;
 import to.lodestone.bookshelfapi.api.menu.IMenuManager;
 
 public interface IBookshelfAPI {
@@ -34,8 +34,8 @@ public interface IBookshelfAPI {
 
     /**
      * Fetches the Game Manager.
-     * @return The {@link IGameManager} instance.
+     * @return The {@link IServerManager} instance.
      */
-    IGameManager getGameManager();
+    IServerManager getServerManager();
 
 }

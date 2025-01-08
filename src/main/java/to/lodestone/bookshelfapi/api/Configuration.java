@@ -241,7 +241,17 @@ public class Configuration {
      * @return true if the configuration was read/created successfully, false otherwise.
      */
     public boolean initialize() {
-        return initialize(true);
+        return initialize(true, true);
+    }
+
+    /**
+     * Attempt to read or create the file and plugin folder.
+     * Use this method instead of onEnable() for more control over this process.
+     *
+     * @return true if the configuration was read/created successfully, false otherwise.
+     */
+    public boolean initialize(boolean loadEmbedded) {
+        return initialize(true, loadEmbedded);
     }
 
     /**
@@ -251,16 +261,16 @@ public class Configuration {
      * @param tryPluginFolder Whether to attempt to create the plugin folder or not
      * @return true if the configuration was read/created successfully, false otherwise.
      */
-    public boolean initialize(boolean tryPluginFolder) {
+    public boolean initialize(boolean tryPluginFolder, boolean loadEmbedded) {
         try {
-            return unsafeInitialize(tryPluginFolder);
+            return unsafeInitialize(tryPluginFolder, loadEmbedded);
         } catch (Exception var1) {
             var1.printStackTrace();
             return false;
         }
     }
 
-    public boolean unsafeInitialize(boolean tryPluginFolder) throws IOException, InvalidConfigurationException {
+    public boolean unsafeInitialize(boolean tryPluginFolder, boolean loadEmbedded) throws IOException, InvalidConfigurationException {
         config = new YamlConfiguration();
 
         if (tryPluginFolder) {
@@ -271,7 +281,7 @@ public class Configuration {
 
         File configFile = new File(plugin.getDataFolder() + File.separator + filePath);
 
-        if (!configFile.exists()) {
+        if (!configFile.exists() && loadEmbedded) {
             plugin.saveResource(filePath, false);
         }
 

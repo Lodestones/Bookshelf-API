@@ -1,6 +1,6 @@
 package to.lodestone.bookshelfapi.api.manager;
 
-public interface IGameManager {
+public interface IServerManager {
 
     void setPVPEnabled(boolean value);
     boolean isPVPEnabled();
