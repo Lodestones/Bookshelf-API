@@ -114,4 +114,4 @@ See something Bookshelf doesn't support, a bug or something that may be useful? 
 ---
 
 # License
-Bookshelf is protected by [Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)](https://creativecommons.org/licenses/by-nc/4.0/legalcode.txt). Please view the license [here](https://github.com/Lodestones/Bookshelf/blob/master/LICENSE).
+Bookshelf is ARR. Please view the license [here](https://github.com/Lodestones/Bookshelf/blob/master/LICENSE).
