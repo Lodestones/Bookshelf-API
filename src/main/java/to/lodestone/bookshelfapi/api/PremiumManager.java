@@ -26,6 +26,22 @@ public class PremiumManager implements Listener {
         this.isLicensedServer = isLicensedServer;
     }
 
+    public PremiumManager(String licenseKey, String id) {
+        boolean isLicensedServer;
+        try {
+            URL url = new URL("https://api.ipify.org");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setRequestProperty("User-Agent", "Mozilla/5.0");
+            String ip = new String(conn.getInputStream().readAllBytes());
+            isLicensedServer = checkStatus(LICENSE_URL + String.format("?ip=%s&key=%s&id=%s", ip, licenseKey, id));
+        } catch (Exception ignored) {
+            isLicensedServer = false;
+        }
+
+        this.isLicensedServer = isLicensedServer;
+    }
+
     public boolean isLicensedServer() {
         return isLicensedServer;
     }

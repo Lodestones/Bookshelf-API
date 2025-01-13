@@ -29,7 +29,8 @@ public abstract class Menu {
         this.topMenuBuilder = this.getTopMenuBuilder(new TopMenuBuilder());
         final int rows = this.topMenuBuilder.getRows();
 
-        this.inventory = Bukkit.createInventory(null, rows * 9, this.topMenuBuilder.getTitle());
+        if (this.inventory == null)
+            this.inventory = Bukkit.createInventory(null, rows * 9, this.topMenuBuilder.getTitle());
 
         // Top Contents
         if (topMenuBuilder.getRowBuilders().length > 6)
@@ -68,11 +69,18 @@ public abstract class Menu {
         }
     }
 
+    public void update() {
+        this.init();
+    }
+
     public void open() {
-        if (this.inventory == null || this.topMenuBuilder == null) this.init();
+        this.init();
         topMenuBuilder.getOpenActions().forEach(event -> event.accept(null));
 
         BookshelfAPI.getApi().getMenuManager().register(player.getUniqueId(), this);
+
+        // if open inventory is the current, ignore
+        if (player.getOpenInventory().getTopInventory().equals(this.inventory)) return;
         player.openInventory(this.inventory);
     }
 
