@@ -4,6 +4,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import to.lodestone.bookshelfapi.BookshelfAPI;
@@ -13,7 +14,7 @@ import to.lodestone.bookshelfapi.api.menu.build.TopMenuBuilder;
 
 import java.util.function.Consumer;
 
-public abstract class Menu {
+public abstract class Menu implements InventoryHolder {
 
     protected Inventory inventory;
     private TopMenuBuilder topMenuBuilder;
@@ -67,6 +68,12 @@ public abstract class Menu {
                 }
             }
         }
+    }
+
+    @Override
+    @NotNull
+    public Inventory getInventory() {
+        return this.inventory;
     }
 
     public void update() {
