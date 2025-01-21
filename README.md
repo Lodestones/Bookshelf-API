@@ -62,7 +62,7 @@ Add it in your root build.gradle at the end of repositories:
 Add the dependency
 ```java
     dependencies {
-        implementation 'com.github.Lodestones:Bookshelf:beta-v1.0.6'
+        implementation 'com.github.Lodestones:Bookshelf:VERSION'
     }
 ```
 ## Maven
@@ -80,7 +80,7 @@ Add the dependency
     <dependency>
         <groupId>com.github.Lodestones</groupId>
         <artifactId>Bookshelf</artifactId>
-        <version>beta-v1.0.6</version>
+        <version>VERSION</version>
     </dependency>
 ```
 
@@ -114,4 +114,4 @@ See something Bookshelf doesn't support, a bug or something that may be useful? 
 ---
 
 # License
-Bookshelf is protected by [Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)](https://creativecommons.org/licenses/by-nc/4.0/legalcode.txt). Please view the license [here](https://github.com/Lodestones/Bookshelf/blob/master/LICENSE).
+Bookshelf is ARR. Please view the license [here](https://github.com/Lodestones/Bookshelf/blob/master/LICENSE).
