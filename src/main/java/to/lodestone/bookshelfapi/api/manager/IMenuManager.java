@@ -1,6 +1,7 @@
-package to.lodestone.bookshelfapi.api.menu;
+package to.lodestone.bookshelfapi.api.manager;
 
 import org.bukkit.entity.Player;
+import to.lodestone.bookshelfapi.api.menu.Menu;
 
 import java.util.UUID;
 

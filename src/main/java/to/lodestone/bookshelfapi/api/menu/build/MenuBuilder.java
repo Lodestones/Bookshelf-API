@@ -1,7 +1,9 @@
 package to.lodestone.bookshelfapi.api.menu.build;
 
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.function.Consumer;
@@ -19,6 +21,26 @@ public class MenuBuilder {
         consumer.accept(builder);
         rowBuilders[index] = builder;
         return this;
+    }
+
+    public void setItem(int slot, ItemStack itemStack, @Nullable Consumer<InventoryClickEvent> consumer) {
+        int row = slot / 9;
+        int column = slot % 9;
+        rowBuilders[row].setSlot(column, itemStack, consumer);
+    }
+
+    public void setItem(int slot, ItemStack itemStack) {
+        int row = slot / 9;
+        int column = slot % 9;
+        rowBuilders[row].setSlot(column, itemStack, null);
+    }
+
+    public void set(int row, int column, ItemStack itemStack, @Nullable Consumer<InventoryClickEvent> consumer) {
+        rowBuilders[row].setSlot(column, itemStack, consumer);
+    }
+
+    public void set(int row, int column, ItemStack itemStack) {
+        rowBuilders[row].setSlot(column, itemStack, null);
     }
 
     public RowBuilder[] getRowBuilders() {

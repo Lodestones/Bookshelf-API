@@ -1,13 +1,15 @@
-package to.lodestone.bookshelfapi.api.item;
+package to.lodestone.bookshelfapi.api.manager;
 
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
+import to.lodestone.bookshelfapi.api.item.CustomItem;
+import to.lodestone.bookshelfapi.api.item.ItemBuilder;
 
 import java.util.List;
 
 public interface ICustomItemManager {
 
-    void register(CustomItem ...i);
+    void register(CustomItem...i);
 
     @Nullable
     ItemStack getItemStackByClass(Class<? extends CustomItem> itemClass);
@@ -31,6 +33,7 @@ public interface ICustomItemManager {
     ItemStack getItemStackById(String id);
 
     ItemBuilder getItemBuilderById(String id);
+    ItemBuilder getItemBuilderByClass(Class<? extends CustomItem> itemClass);
 
     List<CustomItem> getItems();
 

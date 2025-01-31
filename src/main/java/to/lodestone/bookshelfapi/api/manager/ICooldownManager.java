@@ -1,5 +1,6 @@
 package to.lodestone.bookshelfapi.api.manager;
 
+import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 
 public interface ICooldownManager {
@@ -9,5 +10,12 @@ public interface ICooldownManager {
 
     boolean hasCooldown(Player player, String id);
     boolean hasCooldown(String id);
+
+    boolean notifyPlayerWithCooldown(Player player, String id, Component component);
+    boolean notifyPlayerWithCooldown(Player player, String id, String message);
+    boolean notifyPlayerWithCooldown(Player player, String id, Component component, long milliseconds);
+    boolean notifyPlayerWithCooldown(Player player, String id, String message, long milliseconds);
+
+    long getCooldown(Player player, String id);
 
 }
