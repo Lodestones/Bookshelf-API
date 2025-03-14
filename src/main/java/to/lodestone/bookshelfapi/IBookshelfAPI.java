@@ -1,6 +1,5 @@
 package to.lodestone.bookshelfapi;
 
-import to.lodestone.bookshelfapi.api.item.ICustomItemManager;
 import to.lodestone.bookshelfapi.api.manager.*;
 
 public interface IBookshelfAPI {
