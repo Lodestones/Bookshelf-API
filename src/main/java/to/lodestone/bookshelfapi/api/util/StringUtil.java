@@ -1,7 +1,7 @@
 package to.lodestone.bookshelfapi.api.util;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 import java.util.regex.Pattern;
 
 public class StringUtil {
@@ -18,6 +18,47 @@ public class StringUtil {
         romanValues.put('M', 1000);
     }
 
+    /**
+     * Encodes a list of strings into a Base64 string.
+     *
+     * @param list The list of strings to encode.
+     * @return Base64 encoded string.
+     */
+    public static String encodeListToBase64(List<String> list) {
+        if (list == null || list.isEmpty()) {
+            return "";
+        }
+        String joined = String.join("\n", list);
+        return Base64.getEncoder().encodeToString(joined.getBytes(StandardCharsets.UTF_8));
+    }
+
+    /**
+     * Decodes a Base64 string back into a list of strings.
+     *
+     * @param base64 The Base64 encoded string.
+     * @return The decoded list of strings.
+     */
+    public static List<String> decodeBase64ToList(String base64) {
+        if (base64 == null || base64.isEmpty()) {
+            return List.of();
+        }
+        byte[] decodedBytes = Base64.getDecoder().decode(base64);
+        String decodedString = new String(decodedBytes, StandardCharsets.UTF_8);
+        return Arrays.asList(decodedString.split("\n"));
+    }
+
+    // Test the utility
+    public static void main(String[] args) {
+        List<String> sampleList = List.of("Hello", "World", "Base64", "Encoding");
+
+        // Encode
+        String encoded = encodeListToBase64(sampleList);
+        System.out.println("Encoded: " + encoded);
+
+        // Decode
+        List<String> decodedList = decodeBase64ToList(encoded);
+        System.out.println("Decoded: " + decodedList);
+    }
     public static String titleCase(String sentence, boolean removeUnderscore) {
         StringBuilder titleCaseSentence = new StringBuilder();
         String[] words = sentence.toLowerCase().replaceAll("_", removeUnderscore ? " " : "_").split(" ");

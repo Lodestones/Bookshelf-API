@@ -1,6 +1,6 @@
 package to.lodestone.bookshelfapi;
 
-import org.bukkit.entity.Player;
+import to.lodestone.bookshelfapi.api.item.ICustomItemManager;
 import to.lodestone.bookshelfapi.api.manager.*;
 
 public interface IBookshelfAPI {
@@ -31,10 +31,11 @@ public interface IBookshelfAPI {
 
     /**
      * Fetches the Game Manager.
-     * @return The {@link IServerManager} instance.
+     * @return The {@link IGameManager} instance.
      */
-    IServerManager getServerManager();
+    IGameManager getGameManager();
 
     IPlayerManager getPlayerManager();
+    IVanishManager getVanishManager();
 
 }
