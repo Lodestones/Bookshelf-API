@@ -15,6 +15,9 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.*;
+import org.bukkit.inventory.meta.trim.ArmorTrim;
+import org.bukkit.inventory.meta.trim.TrimMaterial;
+import org.bukkit.inventory.meta.trim.TrimPattern;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionEffect;
@@ -42,6 +45,9 @@ public class ItemBuilder {
     private boolean isUnbreakable = false;
     private String leatherColor;
 
+    private TrimPattern trimPattern = null;
+    private TrimMaterial trimMaterial = null;
+
     private final List<NamespacedKey> tags = new ArrayList<>();
     private final HashMap<NamespacedKey, String> stringTags = new HashMap<>();
     private List<Component> lore;
@@ -53,6 +59,8 @@ public class ItemBuilder {
     private final HashMap<EquipmentSlot, Double> armor = new HashMap<>();
     private final HashMap<EquipmentSlot, Double> armorToughness = new HashMap<>();
     private final HashMap<EquipmentSlot, Double> knockbackResistance = new HashMap<>();
+
+
     public ItemBuilder(Material material) {
         this.material = material;
         this.skullPlayer = null;
@@ -180,6 +188,24 @@ public class ItemBuilder {
         return this;
     }
 
+    public TrimPattern trimPattern() {
+        return this.trimPattern;
+    }
+
+    public ItemBuilder trimPattern(TrimPattern trimPattern) {
+        this.trimPattern = trimPattern;
+        return this;
+    }
+
+    public TrimMaterial trimMaterial() {
+        return this.trimMaterial;
+    }
+
+    public ItemBuilder trimMaterial(TrimMaterial trimMaterial) {
+        this.trimMaterial = trimMaterial;
+        return this;
+    }
+
     public ItemBuilder amount(int amount) {
         this.amount = amount;
         return this;
@@ -291,6 +317,10 @@ public class ItemBuilder {
             if (color != null)
                 leatherArmorMeta.setColor(Color.fromRGB(color.red(), color.green(), color.blue()));
         }
+        if (meta instanceof ArmorMeta armorMeta) {
+            if (this.trimPattern != null && this.trimMaterial != null)
+                armorMeta.setTrim(new ArmorTrim(this.trimMaterial, this.trimPattern));
+        }
         if (meta instanceof SkullMeta skullMeta) {
             if (this.base64Skull != null) {
                 GameProfile profile = new GameProfile(UUID.randomUUID(), "Apollo30");
@@ -338,6 +368,7 @@ public class ItemBuilder {
         meta.lore(this.lore);
         this.itemStack.setItemMeta(meta);
         this.itemStack.addUnsafeEnchantments(this.enchantments);
+
         return this.itemStack;
     }
 
