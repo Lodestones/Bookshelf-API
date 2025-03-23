@@ -33,6 +33,72 @@ public class StringUtil {
     }
 
     /**
+     * Formats a string with the given arguments.
+     *
+     * @param str  The string to format.
+     * @param args The arguments to replace the placeholders with.
+     * @return The formatted string.
+     */
+    public static String format(String str, Object... args) {
+        if (str == null || args == null || args.length == 0) {
+            return str;
+        }
+
+        int argIndex = 0;
+        StringBuilder result = new StringBuilder();
+
+        for (int i = 0; i < str.length(); i++) {
+            if (i < str.length() - 1 && str.charAt(i) == '{' && str.charAt(i + 1) == '}') {
+                if (argIndex < args.length) {
+                    result.append(args[argIndex++]);
+                } else {
+                    result.append("{}"); // guess there's no placeholder?
+                }
+
+                i++;
+            } else {
+                result.append(str.charAt(i));
+            }
+        }
+
+        return result.toString();
+    }
+
+    /**
+     * Formats a string with the given values.
+     *
+     * @param str    The string to format.
+     * @param values The values to replace the placeholders with.
+     * @return The formatted string.
+     */
+    public static String format(String str, Map<String, Object> values) {
+        if (str == null || values == null || values.isEmpty()) {
+            return str;
+        }
+
+        StringBuilder result = new StringBuilder();
+        int length = str.length();
+
+        for (int i = 0; i < length; i++) {
+            if (i < length - 1 && str.charAt(i) == '{') {
+                int endIndex = str.indexOf('}', i);
+                if (endIndex != -1) {
+                    String key = str.substring(i + 1, endIndex);
+                    Object value = values.get(key);
+                    if (value != null) {
+                        result.append(value);
+                        i = endIndex;
+                        continue;
+                    }
+                }
+            }
+            result.append(str.charAt(i));
+        }
+
+        return result.toString();
+    }
+
+    /**
      * Decodes a Base64 string back into a list of strings.
      *
      * @param base64 The Base64 encoded string.
@@ -47,18 +113,6 @@ public class StringUtil {
         return Arrays.asList(decodedString.split("\n"));
     }
 
-    // Test the utility
-    public static void main(String[] args) {
-        List<String> sampleList = List.of("Hello", "World", "Base64", "Encoding");
-
-        // Encode
-        String encoded = encodeListToBase64(sampleList);
-        System.out.println("Encoded: " + encoded);
-
-        // Decode
-        List<String> decodedList = decodeBase64ToList(encoded);
-        System.out.println("Decoded: " + decodedList);
-    }
     public static String titleCase(String sentence, boolean removeUnderscore) {
         StringBuilder titleCaseSentence = new StringBuilder();
         String[] words = sentence.toLowerCase().replaceAll("_", removeUnderscore ? " " : "_").split(" ");
