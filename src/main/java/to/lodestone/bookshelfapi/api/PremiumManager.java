@@ -9,32 +9,20 @@ public class PremiumManager implements Listener {
     private final static String LICENSE_URL = "https://lode.gg/api/license/verify";
     private final boolean isLicensedServer;
 
-    @SuppressWarnings("deprecation")
-    public PremiumManager(String licenseKey) {
+    public PremiumManager(String licenseKey, String id, int port) {
         boolean isLicensedServer;
+
         try {
             URL url = new URL("https://api.ipify.org");
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
             conn.setRequestProperty("User-Agent", "Mozilla/5.0");
             String ip = new String(conn.getInputStream().readAllBytes());
-            isLicensedServer = checkStatus(LICENSE_URL + String.format("?ip=%s&key=%s", ip, licenseKey));
-        } catch (Exception ignored) {
-            isLicensedServer = false;
-        }
-
-        this.isLicensedServer = isLicensedServer;
-    }
-
-    public PremiumManager(String licenseKey, String id) {
-        boolean isLicensedServer;
-        try {
-            URL url = new URL("https://api.ipify.org");
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("GET");
-            conn.setRequestProperty("User-Agent", "Mozilla/5.0");
-            String ip = new String(conn.getInputStream().readAllBytes());
-            isLicensedServer = checkStatus(LICENSE_URL + String.format("?ip=%s&key=%s&id=%s", ip, licenseKey, id));
+            try {
+                isLicensedServer = checkStatus(LICENSE_URL + String.format("?ip=%s&key=%s&id=%s&port=%s", ip, licenseKey, id, port));
+            } catch (Exception e) {
+                isLicensedServer = true;
+            }
         } catch (Exception ignored) {
             isLicensedServer = false;
         }
