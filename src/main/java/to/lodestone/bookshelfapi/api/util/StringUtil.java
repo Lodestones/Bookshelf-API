@@ -2,10 +2,12 @@ package to.lodestone.bookshelfapi.api.util;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class StringUtil {
 
+    private static final Pattern PLACEHOLDER_PATTERN = Pattern.compile("\\{(.*?)\\}");
     private static final Map<Character, Integer> romanValues = new HashMap<>();
 
     static {
@@ -44,21 +46,19 @@ public class StringUtil {
             return str;
         }
 
-        int argIndex = 0;
         StringBuilder result = new StringBuilder();
+        int length = str.length();
 
-        for (int i = 0; i < str.length(); i++) {
-            if (i < str.length() - 1 && str.charAt(i) == '{' && str.charAt(i + 1) == '}') {
-                if (argIndex < args.length) {
-                    result.append(args[argIndex++]);
-                } else {
-                    result.append("{}"); // guess there's no placeholder?
+        for (int i = 0; i < length; i++) {
+            if (i < length - 2 && str.charAt(i) == '{' && Character.isDigit(str.charAt(i + 1)) && str.charAt(i + 2) == '}') {
+                int index = str.charAt(i + 1) - '0'; // Convert '0' - '9' to int index
+                if (index >= 0 && index < args.length) {
+                    result.append(args[index]);
+                    i += 2; // Skip past `{X}`
+                    continue;
                 }
-
-                i++;
-            } else {
-                result.append(str.charAt(i));
             }
+            result.append(str.charAt(i));
         }
 
         return result.toString();
@@ -76,24 +76,15 @@ public class StringUtil {
             return str;
         }
 
+        Matcher matcher = PLACEHOLDER_PATTERN.matcher(str);
         StringBuilder result = new StringBuilder();
-        int length = str.length();
 
-        for (int i = 0; i < length; i++) {
-            if (i < length - 1 && str.charAt(i) == '{') {
-                int endIndex = str.indexOf('}', i);
-                if (endIndex != -1) {
-                    String key = str.substring(i + 1, endIndex);
-                    Object value = values.get(key);
-                    if (value != null) {
-                        result.append(value);
-                        i = endIndex;
-                        continue;
-                    }
-                }
-            }
-            result.append(str.charAt(i));
+        while (matcher.find()) {
+            String key = matcher.group(1); // Extract key inside `{ }`
+            Object value = values.get(key);
+            matcher.appendReplacement(result, value != null ? value.toString() : matcher.group(0));
         }
+        matcher.appendTail(result);
 
         return result.toString();
     }
