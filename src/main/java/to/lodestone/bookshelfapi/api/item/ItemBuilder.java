@@ -352,17 +352,17 @@ public class ItemBuilder {
         }
         if (this.armorToughness.size() > 0) {
             for (Map.Entry<EquipmentSlot, Double> entry : armorToughness.entrySet()) {
-                meta.addAttributeModifier(Attribute.GENERIC_ARMOR, new AttributeModifier(UUID.randomUUID(), "generic.armor_toughness", entry.getValue(), AttributeModifier.Operation.ADD_NUMBER, entry.getKey()));
+                meta.addAttributeModifier(Attribute.GENERIC_ARMOR_TOUGHNESS, new AttributeModifier(UUID.randomUUID(), "generic.armor_toughness", entry.getValue(), AttributeModifier.Operation.ADD_NUMBER, entry.getKey()));
             }
         }
         if (this.knockbackResistance.size() > 0) {
             for (Map.Entry<EquipmentSlot, Double> entry : knockbackResistance.entrySet()) {
-                meta.addAttributeModifier(Attribute.GENERIC_ARMOR, new AttributeModifier(UUID.randomUUID(), "generic.knockback_resistance", entry.getValue(), AttributeModifier.Operation.ADD_NUMBER, entry.getKey()));
+                meta.addAttributeModifier(Attribute.GENERIC_KNOCKBACK_RESISTANCE, new AttributeModifier(UUID.randomUUID(), "generic.knockback_resistance", entry.getValue(), AttributeModifier.Operation.ADD_NUMBER, entry.getKey()));
             }
         }
         if (this.attackDamage.size() > 0) {
             for (Map.Entry<EquipmentSlot, Double> entry : attackDamage.entrySet()) {
-                meta.addAttributeModifier(Attribute.GENERIC_ARMOR, new AttributeModifier(UUID.randomUUID(), "generic.attack_damage", entry.getValue(), AttributeModifier.Operation.ADD_NUMBER, entry.getKey()));
+                meta.addAttributeModifier(Attribute.GENERIC_ATTACK_DAMAGE, new AttributeModifier(UUID.randomUUID(), "generic.attack_damage", entry.getValue(), AttributeModifier.Operation.ADD_NUMBER, entry.getKey()));
             }
         }
         meta.lore(this.lore);
