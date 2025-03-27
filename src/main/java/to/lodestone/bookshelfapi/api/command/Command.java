@@ -1,12 +1,7 @@
 package to.lodestone.bookshelfapi.api.command;
 
-import dev.jorel.commandapi.BukkitExecutable;
-import dev.jorel.commandapi.CommandAPIBukkit;
 import dev.jorel.commandapi.CommandAPICommand;
-import dev.jorel.commandapi.CommandTree;
 import dev.jorel.commandapi.arguments.Argument;
-import dev.jorel.commandapi.commandsenders.BukkitCommandSender;
-import dev.jorel.commandapi.exceptions.WrapperCommandSyntaxException;
 import dev.jorel.commandapi.executors.*;
 import org.bukkit.command.CommandSender;
 
@@ -16,6 +11,7 @@ public class Command {
 
     protected final CommandAPICommand command;
     protected final String name;
+
     public Command(String name) {
         this.name = name;
         this.command = new CommandAPICommand(name);
@@ -41,12 +37,12 @@ public class Command {
         return this;
     }
 
-    public Command optionalArguments(Argument<?> ...args) {
+    public Command optionalArguments(Argument<?>... args) {
         this.command.withOptionalArguments(args);
         return this;
     }
 
-    public Command arguments(Argument<?> ...args) {
+    public Command arguments(Argument<?>... args) {
         this.command.withArguments(args);
         return this;
     }
@@ -156,7 +152,7 @@ public class Command {
         return this;
     }
 
-    public Command aliases(String ...aliases) {
+    public Command aliases(String... aliases) {
         this.command.setAliases(aliases);
         return this;
     }
