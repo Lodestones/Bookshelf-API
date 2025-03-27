@@ -1,19 +1,17 @@
 package to.lodestone.bookshelfapi.api.util;
 
 import net.kyori.adventure.key.Key;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.*;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.Style;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import to.lodestone.bookshelfapi.api.kyori.FontInfo;
 import to.lodestone.bookshelfapi.api.kyori.Wrap;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class MiniMessageUtil {
@@ -65,20 +63,26 @@ public class MiniMessageUtil {
     }
 
     private static String getCenteredMessage(String str) {
-        if (str == null || str.equals("")) return "";
+        if (str == null || str.isEmpty()) return "";
+
         Component component = MINI_MESSAGE.deserialize(str);
         int messagePxSize = 0;
-        boolean previousCode = false;
-        boolean isBold;
-        List<Component> individualComponents = new ArrayList<>();
-        individualComponents.add(component);
-        for (List<Component> nested = component.children(); !nested.isEmpty(); nested = nested.get(0).children()) {
-            individualComponents.addAll(nested);
-        }
-        for (Component child : individualComponents) {
-            String message = ((TextComponent) child).content();
-            isBold = child.hasDecoration(TextDecoration.BOLD);
-            for (char c : message.toCharArray()) {
+
+        Queue<Component> queue = new LinkedList<>();
+        queue.add(component);
+
+        while (!queue.isEmpty()) {
+            Component current = queue.poll();
+            queue.addAll(current.children());
+
+            // Get the visible text content (for TextComponent, TranslatableComponent, etc.)
+            String content = getComponentContent(current);
+            if (content == null || content.isEmpty()) continue;
+
+            boolean isBold = current.decoration(TextDecoration.BOLD) == TextDecoration.State.TRUE;
+
+            boolean previousCode = false;
+            for (char c : content.toCharArray()) {
                 if (c == '§') {
                     previousCode = true;
                 } else if (previousCode) {
@@ -91,16 +95,41 @@ public class MiniMessageUtil {
                 }
             }
         }
+
         int halvedMessageSize = messagePxSize / 2;
         int toCompensate = CENTER_PX - halvedMessageSize;
         int spaceLength = FontInfo.SPACE.getLength() + 1;
         int compensated = 0;
+
         StringBuilder sb = new StringBuilder();
         while (compensated < toCompensate) {
             sb.append(" ");
             compensated += spaceLength;
         }
+
         return sb + str;
+    }
+
+    private static String getComponentContent(Component component) {
+        if (component instanceof TextComponent text) {
+            return text.content();
+        }
+        if (component instanceof TranslatableComponent translatable) {
+            // Simplified fallback: use the translation key
+            return translatable.key();
+        }
+        if (component instanceof KeybindComponent keybind) {
+            return keybind.keybind();
+        }
+        if (component instanceof ScoreComponent score) {
+            return score.value();
+        }
+        if (component instanceof SelectorComponent selector) {
+            return selector.pattern();
+        }
+
+        // Fallback to plain string representation (optional)
+        return LegacyComponentSerializer.legacySection().serialize(component);
     }
 
     /**
@@ -109,7 +138,7 @@ public class MiniMessageUtil {
      * @param components A {@link List} of {@link Component}
      * @return A single {@link Component}.
      */
-    public static Component persistStyle(Component ...components) {
+    public static Component persistStyle(Component... components) {
         Component component = Component.empty();
         for (Component comp : components) {
             component = component.append(comp).style(comp.style());
