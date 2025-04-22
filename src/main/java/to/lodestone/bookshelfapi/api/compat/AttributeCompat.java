@@ -19,6 +19,7 @@ public class AttributeCompat {
         try {
             // Get the attribute field reflectively
             Field field = Attribute.class.getField(attributeName);
+            field.setAccessible(true);
             Attribute attribute = (Attribute) field.get(null);
 
             // Get the attribute instance from the entity
@@ -42,6 +43,7 @@ public class AttributeCompat {
     public static double getAttribute(LivingEntity target, String attributeName) {
         try {
             Field field = Attribute.class.getField(attributeName);
+            field.setAccessible(true);
             Attribute attribute = (Attribute) field.get(null);
 
             AttributeInstance attributeInstance = target.getAttribute(attribute);
