@@ -2,7 +2,6 @@ package to.lodestone.bookshelfapi.api.item;
 
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
-import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -22,12 +21,10 @@ import org.bukkit.inventory.meta.trim.TrimPattern;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionEffect;
-import to.lodestone.bookshelfapi.BookshelfAPI;
 import to.lodestone.bookshelfapi.api.util.MiniMessageUtil;
 
 import javax.annotation.Nonnegative;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -61,8 +58,7 @@ public class ItemBuilder {
     private TrimPattern trimPattern = null;
     private TrimMaterial trimMaterial = null;
     private List<Component> lore;
-    // 1.21.4
-    private ConsumableMeta consumableMeta = null;
+
 
     public ItemBuilder(Material material) {
         this.material = material;
@@ -127,26 +123,12 @@ public class ItemBuilder {
         return this;
     }
 
-    public ConsumableMeta consumableMeta() {
-        return this.consumableMeta;
-    }
-
     public void addOnBuildConsumer(Consumer<ItemStack> consumer) {
         this.onBuildConsumers.add(consumer);
     }
 
     public List<Consumer<ItemStack>> buildConsumers() {
         return this.onBuildConsumers;
-    }
-
-    public ItemBuilder consumableMeta(ConsumableMeta consumableMeta) {
-        if (!BookshelfAPI.isHigher1_21_4()) {
-            Bukkit.getLogger().warning("ItemBuilder#sound is not supported in this version! Upgrade your server's version to 1.21.4+");
-            return this;
-        }
-
-        this.consumableMeta = consumableMeta;
-        return this;
     }
 
     public String titleString() {
@@ -364,54 +346,6 @@ public class ItemBuilder {
                 skullMeta.setOwningPlayer(this.skullPlayer);
             }
         }
-        if (BookshelfAPI.isHigher1_21_4()) {
-            try {
-                ItemStack item = this.itemStack;
-
-                // Reflect classes
-                Class<?> consumableClass = Class.forName("io.papermc.paper.datacomponent.item.Consumable");
-                Class<?> keyClass = Class.forName("net.kyori.adventure.key.Key");
-                Class<?> animationClass = Class.forName("io.papermc.paper.datacomponent.item.consumable.ItemUseAnimation");
-                Class<?> dataComponentTypesClass = Class.forName("io.papermc.paper.datacomponent.DataComponentTypes");
-                Class<?> dataComponentTypeClass = Class.forName("io.papermc.paper.datacomponent.DataComponentType$Valued");
-                Class<?> dataComponentBuilderClass = Class.forName("io.papermc.paper.datacomponent.DataComponentBuilder");
-
-                // builder = Consumable.consumable()
-                Method consumableBuilderMethod = consumableClass.getDeclaredMethod("consumable");
-                consumableBuilderMethod.setAccessible(true);
-                Object builder = consumableBuilderMethod.invoke(null);
-
-                // animation(ItemUseAnimation.BLOCK)
-                Field blockAnimationField = animationClass.getDeclaredField(consumableMeta.itemUseAnimation.name());
-                blockAnimationField.setAccessible(true);
-                Object blockAnimation = blockAnimationField.get(null);
-
-                Method animationMethod = builder.getClass().getDeclaredMethod("animation", animationClass);
-                animationMethod.setAccessible(true);
-                builder = animationMethod.invoke(builder, blockAnimation);
-
-                Method consumeSeconds = builder.getClass().getDeclaredMethod("consumeSeconds", float.class);
-                consumeSeconds.setAccessible(true);
-                builder = consumeSeconds.invoke(builder, consumableMeta.consumeSeconds);
-
-                Method soundMethod = builder.getClass().getDeclaredMethod("sound", keyClass);
-                soundMethod.setAccessible(true);
-                builder = soundMethod.invoke(builder, consumableMeta.sound);
-
-                Method particlesMethod = builder.getClass().getDeclaredMethod("hasConsumeParticles", boolean.class);
-                particlesMethod.setAccessible(true);
-                builder = particlesMethod.invoke(builder, consumableMeta.hasConsumeParticles);
-
-                Field consumableField = dataComponentTypesClass.getDeclaredField("CONSUMABLE");
-                consumableField.setAccessible(true);
-                Object consumableType = consumableField.get(null);
-
-                item.getClass().getDeclaredMethod("setData", dataComponentTypeClass, dataComponentBuilderClass)
-                        .invoke(item, consumableType, builder);
-            } catch (Exception err) {
-                err.printStackTrace();
-            }
-        }
 
         stringTags.forEach((key, value) -> meta.getPersistentDataContainer().set(key, PersistentDataType.STRING, value));
         tags.forEach(key -> meta.getPersistentDataContainer().set(key, PersistentDataType.BOOLEAN, true));
@@ -452,68 +386,4 @@ public class ItemBuilder {
         return this.itemStack;
     }
 
-    public static class ConsumableMeta {
-        private @Nonnegative float consumeSeconds;
-        private ItemUseAnimation itemUseAnimation;
-        private Key sound;
-        private boolean hasConsumeParticles;
-
-        public ConsumableMeta() {
-            this.consumeSeconds = 0;
-            this.itemUseAnimation = ItemUseAnimation.NONE;
-            this.sound = Key.key("minecraft:entity.generic.eat");
-            this.hasConsumeParticles = true;
-        }
-
-        public @Nonnegative float consumeSeconds() {
-            return this.consumeSeconds;
-        }
-
-        public ItemUseAnimation itemUseAnimation() {
-            return this.itemUseAnimation;
-        }
-
-        public Key sound() {
-            return this.sound;
-        }
-
-        public boolean hasConsumeParticles() {
-            return this.hasConsumeParticles;
-        }
-
-        public ConsumableMeta consumeSeconds(@Nonnegative float seconds) {
-            this.consumeSeconds = seconds;
-            return this;
-        }
-
-        public ConsumableMeta itemUseAnimation(ItemUseAnimation animation) {
-            this.itemUseAnimation = animation;
-            return this;
-        }
-
-        public ConsumableMeta sound(Key sound) {
-            this.sound = sound;
-            return this;
-        }
-
-        public ConsumableMeta hasConsumeParticles(boolean hasConsumeParticles) {
-            this.hasConsumeParticles = hasConsumeParticles;
-            return this;
-        }
-
-        public enum ItemUseAnimation {
-            NONE,
-            EAT,
-            DRINK,
-            BLOCK,
-            BOW,
-            SPEAR,
-            CROSSBOW,
-            SPYGLASS,
-            TOOT_HORN,
-            BRUSH,
-            BUNDLE
-        }
-
-    }
 }
