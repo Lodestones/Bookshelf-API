@@ -27,31 +27,31 @@
                     <target>${java.version}</target>
                 </configuration>
             </plugin>
-            <!--            <plugin>-->
-            <!--                <groupId>org.apache.maven.plugins</groupId>-->
-            <!--                <artifactId>maven-shade-plugin</artifactId>-->
-            <!--                <version>3.6.0</version>-->
-            <!--                <executions>-->
-            <!--                    <execution>-->
-            <!--                        <id>shade</id>-->
-            <!--                        <phase>package</phase>-->
-            <!--                        <goals>-->
-            <!--                            <goal>shade</goal>-->
-            <!--                        </goals>-->
-            <!--                    </execution>-->
-            <!--                </executions>-->
-            <!--                <configuration>-->
-            <!--                    <minimizeJar>true</minimizeJar>-->
-            <!--                    <relocations>-->
-            <!--                        <relocation>-->
-            <!--                            <pattern>dev.jorel.commandapi</pattern>-->
-            <!--                            <shadedPattern>dev.jorel.commandapi.bookshelfapi</shadedPattern>-->
-            <!--                        </relocation>-->
-            <!--                    </relocations>-->
-            <!--                    <finalName>${project.artifactId}-${project.version}</finalName>-->
-            <!--                    <shadedArtifactAttached>false</shadedArtifactAttached>-->
-            <!--                </configuration>-->
-            <!--            </plugin>-->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.6.0</version>
+                <executions>
+                    <execution>
+                        <id>shade</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <minimizeJar>true</minimizeJar>
+                    <!--                                <relocations>-->
+                    <!--                                    <relocation>-->
+                    <!--                                        <pattern>dev.jorel.commandapi</pattern>-->
+                    <!--                                        <shadedPattern>dev.jorel.commandapi.bookshelfapi</shadedPattern>-->
+                    <!--                                    </relocation>-->
+                    <!--                                </relocations>-->
+                    <finalName>${project.artifactId}-${project.version}</finalName>
+                    <shadedArtifactAttached>false</shadedArtifactAttached>
+                </configuration>
+            </plugin>
         </plugins>
         <resources>
             <resource>
