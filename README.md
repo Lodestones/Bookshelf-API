@@ -24,7 +24,6 @@ The Bookshelf API also provides utility classes that you can use such as:
 - [Task Schedulers](https://github.com/Lodestones/Bookshelf/blob/master/src/main/java/to/lodestone/bookshelfapi/api/Task.java)
 - [Modrinth Version Updater](https://github.com/Lodestones/Bookshelf/blob/master/src/main/java/to/lodestone/bookshelfapi/api/VersionUpdater.java)
 - [Fetching Players with Mojang API](https://github.com/Lodestones/Bookshelf/blob/master/src/main/java/to/lodestone/bookshelfapi/api/mojang/MojangProfile.java)
-- [Another CommandAPI Builder](https://github.com/Lodestones/Bookshelf/blob/master/src/main/java/to/lodestone/bookshelfapi/api/command/Command.java)
 
 ## Table of Contents
 1. [Installing the Bookshelf API](#installation)
