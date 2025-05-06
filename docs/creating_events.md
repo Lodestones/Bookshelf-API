@@ -5,11 +5,12 @@ Ensure that your event class is structured with getters and setters.
 
 # Example on a Readable Event
 You can emit the event by running `PlayerEliminatedEvent#callEvent();`
+
 ```java
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
-import to.lodestone.bookshelfapi.api.event.BaseEvent;
+import event.api.gg.lode.bookshelfapi.BaseEvent;
 
 public class PlayerEliminatedEvent extends BaseEvent {
 
@@ -37,11 +38,11 @@ You can cancel the event by setting `PlayerConsumeEvent#setCancelled(boolean);`
 # Example on a Cancellable Event
 
 ```java
-import org.bukkit.entity.LivingEntity;
+
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.inventory.ItemStack;
-import to.lodestone.bookshelfapi.api.event.BaseEvent;
+import event.api.gg.lode.bookshelfapi.BaseEvent;
 
 public class PlayerConsumeEvent extends BaseEvent implements Cancellable {
 

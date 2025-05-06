@@ -7,10 +7,10 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import to.lodestone.bookshelfapi.api.menu.Menu;
-import to.lodestone.bookshelfapi.api.menu.build.MenuBuilder;
-import to.lodestone.bookshelfapi.api.menu.build.TopMenuBuilder;
-import to.lodestone.bookshelfapi.api.util.MiniMessageUtil;
+import menu.api.gg.lode.bookshelfapi.Menu;
+import build.menu.api.gg.lode.bookshelfapi.MenuBuilder;
+import build.menu.api.gg.lode.bookshelfapi.TopMenuBuilder;
+import util.api.gg.lode.bookshelfapi.MiniMessageUtil;
 
 public class TestMenu extends Menu {
 

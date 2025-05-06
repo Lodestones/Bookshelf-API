@@ -89,8 +89,8 @@ Add the dependency
 Hooking into the Bookshelf API.
 
 ```java
-import to.lodestone.bookshelfapi.BookshelfAPI;
-import to.lodestone.bookshelfapi.IBookshelfAPI;
+import gg.lode.bookshelfapi.BookshelfAPI;
+import gg.lode.bookshelfapi.IBookshelfAPI;
 
 public class MainPlugin extends JavaPlugin {
 
