@@ -2,14 +2,14 @@ package gg.lode.bookshelfapi.api.util;
 
 import java.util.*;
 
-public class ArgumentParserUtil {
-    
+public class ArgumentParser {
+
     public record ParsedArguments(String cleanedArgs, Map<String, String> flags) {
         public boolean hasFlag(String flag) {
             return flags.containsKey(flag);
         }
 
-        public boolean hasFlag(String ...flags) {
+        public boolean hasFlag(String... flags) {
             for (String flag : flags) {
                 if (hasFlag(flag)) {
                     return true;
