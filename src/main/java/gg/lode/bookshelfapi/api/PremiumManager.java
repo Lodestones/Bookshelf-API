@@ -34,7 +34,6 @@ public class PremiumManager implements Listener {
         return isLicensedServer;
     }
 
-    @SuppressWarnings("deprecation")
     private boolean checkStatus(String urlString) {
         try {
             URL url = new URL(urlString);

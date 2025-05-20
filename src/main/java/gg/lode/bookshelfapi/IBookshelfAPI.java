@@ -1,8 +1,25 @@
 package gg.lode.bookshelfapi;
 
 import gg.lode.bookshelfapi.api.manager.*;
+import org.bukkit.plugin.java.JavaPlugin;
 
 public interface IBookshelfAPI {
+
+    /**
+     * Initialize the API when used as a plugin.
+     * This is called by the Bookshelf plugin.
+     * 
+     * @param plugin The JavaPlugin instance
+     */
+    void initialize(JavaPlugin plugin);
+
+    /**
+     * Initialize the API in standalone mode.
+     * This is called when Bookshelf is shaded into another project.
+     * 
+     * @param plugin The JavaPlugin instance of the host plugin
+     */
+    void initializeStandalone(JavaPlugin plugin);
 
     /**
      * Fetches the Menu Manager.

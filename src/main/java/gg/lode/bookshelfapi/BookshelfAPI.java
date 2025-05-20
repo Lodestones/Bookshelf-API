@@ -1,6 +1,7 @@
 package gg.lode.bookshelfapi;
 
 import org.bukkit.Bukkit;
+import org.bukkit.plugin.java.JavaPlugin;
 
 /**
  * Official API of the Bookshelf Plugin
@@ -11,6 +12,43 @@ import org.bukkit.Bukkit;
 public class BookshelfAPI {
 
     private static IBookshelfAPI api;
+    private static boolean initialized = false;
+
+    /**
+     * Initialize the Bookshelf API with a plugin instance.
+     * This should be called when using Bookshelf as a plugin.
+     * 
+     * @param plugin The JavaPlugin instance
+     * @throws IllegalStateException if the API is already initialized
+     */
+    public static void initialize(JavaPlugin plugin) {
+        if (initialized) {
+            throw new IllegalStateException("Bookshelf API is already initialized!");
+        }
+        if (api == null) {
+            throw new IllegalStateException("Bookshelf API implementation not found! Make sure Bookshelf plugin is installed.");
+        }
+        api.initialize(plugin);
+        initialized = true;
+    }
+
+    /**
+     * Initialize the Bookshelf API in standalone mode.
+     * This should be called when shading Bookshelf into another project.
+     * 
+     * @param plugin The JavaPlugin instance of the host plugin
+     * @throws IllegalStateException if the API is already initialized
+     */
+    public static void initializeStandalone(JavaPlugin plugin) {
+        if (initialized) {
+            throw new IllegalStateException("Bookshelf API is already initialized!");
+        }
+        if (api == null) {
+            throw new IllegalStateException("Bookshelf API implementation not found! Make sure Bookshelf plugin is installed.");
+        }
+        api.initializeStandalone(plugin);
+        initialized = true;
+    }
 
     /**
      * Internal use of the API for Bookshelf to use.
@@ -23,8 +61,12 @@ public class BookshelfAPI {
 
     /**
      * Retrieves the API that Bookshelf uses.
+     * @throws IllegalStateException if the API is not initialized
      */
     public static IBookshelfAPI getApi() {
+        if (!initialized) {
+            throw new IllegalStateException("Bookshelf API is not initialized! Call BookshelfAPI.initialize() first.");
+        }
         return api;
     }
 
@@ -42,8 +84,6 @@ public class BookshelfAPI {
                 return minor > 21 || (minor == 21 && patch >= 4);
             }
         }
-
         return false;
     }
-
 }
