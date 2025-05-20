@@ -23,18 +23,22 @@ public interface IBookshelfAPI {
     IChatManager getChatManager();
 
     /**
-     * Fetches the Item Manager.
-     * @return The {@link ICustomItemManager} instance.
-     */
-    ICustomItemManager getItemManager();
-
-    /**
      * Fetches the Game Manager.
      * @return The {@link IGameManager} instance.
      */
     IGameManager getGameManager();
 
+    /**
+     * Fetches the Player Manager.
+     * @return The {@link IPlayerManager} instance.
+     */
     IPlayerManager getPlayerManager();
-    IVanishManager getVanishManager();
 
+    /**
+     * Fetches the Item Manager.
+     * @return The {@link ICustomItemManager} instance.
+     */
+    ICustomItemManager getItemManager();
+
+    IVanishManager getVanishManager();
 }

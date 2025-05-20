@@ -10,11 +10,14 @@ import org.bukkit.event.entity.EntityShootBowEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.NamespacedKey;
 
 public abstract class CustomItem {
 
     protected boolean isEnchantable = false;
     protected boolean isCombinable = false;
+
+    private ItemBuilder builder;
 
     public abstract String id();
 
@@ -28,8 +31,12 @@ public abstract class CustomItem {
 
     public final ItemBuilder getBuilder() throws ClassNotFoundException {
         if (BookshelfAPI.getApi() == null) throw new ClassNotFoundException("Please install Bookshelf to use this method!");
-
-        return BookshelfAPI.getApi().getItemManager().getItemBuilderById(id());
+        if (builder == null) {
+            builder = new ItemBuilder();
+            builder.tag(new NamespacedKey("bookshelf", "custom_item"), id());
+            builder(builder);
+        }
+        return builder;
     }
 
     public void onUnheld(Player player, PlayerItemHeldEvent event, ItemStack item) {}
