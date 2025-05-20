@@ -24,6 +24,7 @@ public class APIMenuManager implements IMenuManager, Listener {
 
     public APIMenuManager(JavaPlugin plugin) {
         this.plugin = plugin;
+        plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
     @Override
