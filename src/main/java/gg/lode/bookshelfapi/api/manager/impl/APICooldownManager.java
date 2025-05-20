@@ -1,82 +1,87 @@
 package gg.lode.bookshelfapi.api.manager.impl;
 
 import gg.lode.bookshelfapi.api.manager.ICooldownManager;
+import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
-public class APICooldownManager implements ICooldownManager {
-    private final Plugin plugin;
-    private final Map<String, Map<UUID, Long>> cooldowns;
+public class APICooldownManager extends BukkitRunnable implements ICooldownManager {
+    private final JavaPlugin plugin;
+    private final Map<String, Long> cooldowns = new HashMap<>();
 
-    public APICooldownManager(Plugin plugin) {
+    public APICooldownManager(JavaPlugin plugin) {
         this.plugin = plugin;
-        this.cooldowns = new ConcurrentHashMap<>();
+        this.runTaskTimer(plugin, 1, 1);
     }
 
     @Override
-    public void setCooldown(Player player, String cooldownId, long durationMillis) {
-        Map<UUID, Long> cooldownMap = cooldowns.computeIfAbsent(cooldownId, k -> new HashMap<>());
-        cooldownMap.put(player.getUniqueId(), System.currentTimeMillis() + durationMillis);
+    public void setCooldown(Player player, String id, long milliseconds) {
+        cooldowns.put(player.getUniqueId() + "-" + id, System.currentTimeMillis() + milliseconds);
     }
 
     @Override
-    public boolean isOnCooldown(Player player, String cooldownId) {
-        Map<UUID, Long> cooldownMap = cooldowns.get(cooldownId);
-        if (cooldownMap == null) {
-            return false;
-        }
-
-        Long endTime = cooldownMap.get(player.getUniqueId());
-        if (endTime == null) {
-            return false;
-        }
-
-        if (System.currentTimeMillis() >= endTime) {
-            cooldownMap.remove(player.getUniqueId());
-            return false;
-        }
-
-        return true;
+    public void setCooldown(String id, long milliseconds) {
+        cooldowns.put(id, System.currentTimeMillis() + milliseconds);
     }
 
     @Override
-    public long getRemainingCooldown(Player player, String cooldownId) {
-        Map<UUID, Long> cooldownMap = cooldowns.get(cooldownId);
-        if (cooldownMap == null) {
-            return 0;
-        }
-
-        Long endTime = cooldownMap.get(player.getUniqueId());
-        if (endTime == null) {
-            return 0;
-        }
-
-        long remaining = endTime - System.currentTimeMillis();
-        if (remaining <= 0) {
-            cooldownMap.remove(player.getUniqueId());
-            return 0;
-        }
-
-        return remaining;
+    public boolean hasCooldown(Player player, String id) {
+        String key = player.getUniqueId() + "-" + id;
+        return cooldowns.containsKey(key) && cooldowns.get(key) > System.currentTimeMillis();
     }
 
     @Override
-    public void removeCooldown(Player player, String cooldownId) {
-        Map<UUID, Long> cooldownMap = cooldowns.get(cooldownId);
-        if (cooldownMap != null) {
-            cooldownMap.remove(player.getUniqueId());
-        }
+    public boolean hasCooldown(String id) {
+        return cooldowns.containsKey(id) && cooldowns.get(id) > System.currentTimeMillis();
     }
 
     @Override
-    public void clearAllCooldowns(Player player) {
-        for (Map<UUID, Long> cooldownMap : cooldowns.values()) {
-            cooldownMap.remove(player.getUniqueId());
-        }
+    public boolean notifyPlayerWithCooldown(Player player, String id, Component component) {
+        return notifyPlayerWithCooldown(player, id, component, 1000L);
     }
-} 
+
+    @Override
+    public boolean notifyPlayerWithCooldown(Player player, String id, String message) {
+        return notifyPlayerWithCooldown(player, id, Component.text(message), 1000L);
+    }
+
+    @Override
+    public boolean notifyPlayerWithCooldown(Player player, String id, Component component, long milliseconds) {
+        if (hasCooldown(player, id)) {
+            player.sendMessage(component);
+            return true;
+        }
+        setCooldown(player, id, milliseconds);
+        return false;
+    }
+
+    @Override
+    public boolean notifyPlayerWithCooldown(Player player, String id, String message, long milliseconds) {
+        return notifyPlayerWithCooldown(player, id, Component.text(message), milliseconds);
+    }
+
+    @Override
+    public long getCooldown(Player player, String id) {
+        String key = player.getUniqueId() + "-" + id;
+        Long end = cooldowns.get(key);
+        if (end == null) return 0;
+        long remaining = end - System.currentTimeMillis();
+        return Math.max(remaining, 0);
+    }
+
+    @Override
+    public void run() {
+        List<String> keysToRemove = new ArrayList<>();
+        cooldowns.forEach((key, cooldown) -> {
+            if (System.currentTimeMillis() > cooldown)
+                keysToRemove.add(key);
+        });
+        keysToRemove.forEach(cooldowns::remove);
+    }
+}
