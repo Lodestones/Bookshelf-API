@@ -1,12 +1,7 @@
 package gg.lode.bookshelfapi;
 
 import gg.lode.bookshelfapi.api.manager.*;
-import gg.lode.bookshelfapi.api.manager.impl.APIMenuManager;
-import gg.lode.bookshelfapi.api.manager.impl.APICooldownManager;
-import gg.lode.bookshelfapi.api.manager.impl.APIChatManager;
-import gg.lode.bookshelfapi.api.manager.impl.APIPlayerManager;
-import gg.lode.bookshelfapi.api.manager.impl.APIGameManager;
-import gg.lode.bookshelfapi.api.manager.impl.APIVanishManager;
+import gg.lode.bookshelfapi.api.manager.impl.*;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -41,8 +36,7 @@ public class BookshelfAPI {
                     .useCooldownManager(false)
                     .useChatManager(false)
                     .useGameManager(false)
-                    .usePlayerManager(false)
-                    .useVanishManager(false);
+                    .usePlayerManager(false);
         }
 
         private boolean shouldRegisterMenuManager = true;
@@ -50,7 +44,6 @@ public class BookshelfAPI {
         private boolean shouldRegisterChatManager = true;
         private boolean shouldRegisterGameManager = true;
         private boolean shouldRegisterPlayerManager = true;
-        private boolean shouldRegisterVanishManager = true;
 
         public Builder useMenuManager(boolean shouldRegisterMenuManager) {
             this.shouldRegisterMenuManager = shouldRegisterMenuManager;
@@ -74,11 +67,6 @@ public class BookshelfAPI {
 
         public Builder usePlayerManager(boolean shouldRegisterPlayerManager) {
             this.shouldRegisterPlayerManager = shouldRegisterPlayerManager;
-            return this;
-        }
-
-        public Builder useVanishManager(boolean shouldRegisterVanishManager) {
-            this.shouldRegisterVanishManager = shouldRegisterVanishManager;
             return this;
         }
 
@@ -155,16 +143,12 @@ public class BookshelfAPI {
 
             @Override
             public ICustomItemManager getItemManager() {
-                throw new UnsupportedOperationException("CustomItemManager is only available through the Bookshelf plugin");
+                throw new UnsupportedOperationException("CustomItemManager is only available for the Bookshelf plugin! Please install Bookshelf to use this feature.");
             }
 
             @Override
             public IVanishManager getVanishManager() {
-                if (builder.shouldRegisterVanishManager) {
-                    return new APIVanishManager(plugin);
-                } else {
-                    throw new UnsupportedOperationException("VanishManager is disabled, please enable it in BookshelfAPI.Builder!");
-                }
+                throw new UnsupportedOperationException("VanishManager is only available for the Bookshelf plugin! Please install Bookshelf to use this feature.");
             }
         };
     }
