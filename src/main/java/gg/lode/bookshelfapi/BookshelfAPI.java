@@ -103,12 +103,12 @@ public class BookshelfAPI {
      */
     public static void init(JavaPlugin plugin, Builder builder) {
         BookshelfAPI.api = new IBookshelfAPI() {
-            private final APIMenuManager menuManager = new APIMenuManager(plugin);
-            private final APICooldownManager cooldownManager = new APICooldownManager(plugin);
-            private final APIChatManager chatManager = new APIChatManager(plugin);
-            private final APIGameManager gameManager = new APIGameManager(plugin);
-            private final APIPlayerManager playerManager = new APIPlayerManager(plugin);
-            private final APICustomItemManager itemManager = new APICustomItemManager(plugin);
+            private final APIMenuManager menuManager = builder.shouldRegisterMenuManager ? new APIMenuManager(plugin) : null;
+            private final APICooldownManager cooldownManager = builder.shouldRegisterCooldownManager ? new APICooldownManager(plugin) : null;
+            private final APIChatManager chatManager = builder.shouldRegisterChatManager ? new APIChatManager(plugin) : null;
+            private final APIGameManager gameManager = builder.shouldRegisterGameManager ? new APIGameManager(plugin) : null;
+            private final APIPlayerManager playerManager = builder.shouldRegisterPlayerManager ? new APIPlayerManager(plugin) : null;
+            private final APICustomItemManager itemManager = builder.shouldRegisterItemManager ? new APICustomItemManager(plugin) : null;
 
             @Override
             public IMenuManager getMenuManager() {
