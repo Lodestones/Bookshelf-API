@@ -25,7 +25,7 @@ public class APIMenuManager implements IMenuManager, Listener {
 
     public APIMenuManager(JavaPlugin plugin) {
         this.plugin = plugin;
-        plugin.getServer().getPluginManager().registerEvents(this, (Plugin) plugin);
+        plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
     @Override
@@ -56,10 +56,9 @@ public class APIMenuManager implements IMenuManager, Listener {
     @EventHandler
     public void on(InventoryClickEvent event) {
         HumanEntity humanEntity = event.getWhoClicked();
-        if (!(humanEntity instanceof Player)) {
+        if (!(humanEntity instanceof Player player)) {
             return;
         }
-        Player player = (Player) humanEntity;
         Inventory clickedInventory = event.getClickedInventory();
         if (clickedInventory == null) {
             return;
@@ -84,10 +83,9 @@ public class APIMenuManager implements IMenuManager, Listener {
     @EventHandler
     public void on(InventoryCloseEvent event) {
         HumanEntity humanEntity = event.getPlayer();
-        if (!(humanEntity instanceof Player)) {
+        if (!(humanEntity instanceof Player player)) {
             return;
         }
-        Player player = (Player) humanEntity;
         Menu menu = activeMenus.get(player.getUniqueId());
         if (menu == null) {
             return;
