@@ -36,7 +36,8 @@ public class BookshelfAPI {
                     .useCooldownManager(false)
                     .useChatManager(false)
                     .useGameManager(false)
-                    .usePlayerManager(false);
+                    .usePlayerManager(false)
+                    .useItemManager(false);
         }
 
         private boolean shouldRegisterMenuManager = true;
@@ -44,6 +45,7 @@ public class BookshelfAPI {
         private boolean shouldRegisterChatManager = true;
         private boolean shouldRegisterGameManager = true;
         private boolean shouldRegisterPlayerManager = true;
+        private boolean shouldRegisterItemManager = true;
 
         public Builder useMenuManager(boolean shouldRegisterMenuManager) {
             this.shouldRegisterMenuManager = shouldRegisterMenuManager;
@@ -67,6 +69,11 @@ public class BookshelfAPI {
 
         public Builder usePlayerManager(boolean shouldRegisterPlayerManager) {
             this.shouldRegisterPlayerManager = shouldRegisterPlayerManager;
+            return this;
+        }
+
+        public Builder useItemManager(boolean shouldRegisterItemManager) {
+            this.shouldRegisterItemManager = shouldRegisterItemManager;
             return this;
         }
 
@@ -96,10 +103,17 @@ public class BookshelfAPI {
      */
     public static void init(JavaPlugin plugin, Builder builder) {
         BookshelfAPI.api = new IBookshelfAPI() {
+            private final APIMenuManager menuManager = new APIMenuManager(plugin);
+            private final APICooldownManager cooldownManager = new APICooldownManager(plugin);
+            private final APIChatManager chatManager = new APIChatManager(plugin);
+            private final APIGameManager gameManager = new APIGameManager(plugin);
+            private final APIPlayerManager playerManager = new APIPlayerManager(plugin);
+            private final APICustomItemManager itemManager = new APICustomItemManager(plugin);
+
             @Override
             public IMenuManager getMenuManager() {
                 if (builder.shouldRegisterMenuManager) {
-                    return new APIMenuManager(plugin);
+                    return menuManager;
                 } else {
                     throw new UnsupportedOperationException("MenuManager is disabled, please enable it in BookshelfAPI.Builder!");
                 }
@@ -108,7 +122,7 @@ public class BookshelfAPI {
             @Override
             public ICooldownManager getCooldownManager() {
                 if (builder.shouldRegisterCooldownManager) {
-                    return new APICooldownManager(plugin);
+                    return cooldownManager;
                 } else {
                     throw new UnsupportedOperationException("CooldownManager is disabled, please enable it in BookshelfAPI.Builder!");
                 }
@@ -117,7 +131,7 @@ public class BookshelfAPI {
             @Override
             public IChatManager getChatManager() {
                 if (builder.shouldRegisterChatManager) {
-                    return new APIChatManager(plugin);
+                    return chatManager;
                 } else {
                     throw new UnsupportedOperationException("ChatManager is disabled, please enable it in BookshelfAPI.Builder!");
                 }
@@ -126,7 +140,7 @@ public class BookshelfAPI {
             @Override
             public IGameManager getGameManager() {
                 if (builder.shouldRegisterGameManager) {
-                    return new APIGameManager(plugin);
+                    return gameManager;
                 } else {
                     throw new UnsupportedOperationException("GameManager is disabled, please enable it in BookshelfAPI.Builder!");
                 }
@@ -135,7 +149,7 @@ public class BookshelfAPI {
             @Override
             public IPlayerManager getPlayerManager() {
                 if (builder.shouldRegisterPlayerManager) {
-                    return new APIPlayerManager(plugin);
+                    return playerManager;
                 } else {
                     throw new UnsupportedOperationException("PlayerManager is disabled, please enable it in BookshelfAPI.Builder!");
                 }
@@ -143,12 +157,16 @@ public class BookshelfAPI {
 
             @Override
             public ICustomItemManager getItemManager() {
-                throw new UnsupportedOperationException("CustomItemManager is only available for the Bookshelf plugin! Please install Bookshelf to use this feature.");
+                if (builder.shouldRegisterItemManager) {
+                    return itemManager;
+                } else {
+                    throw new UnsupportedOperationException("ItemManager is disabled, please enable it in BookshelfAPI.Builder!");
+                }
             }
 
             @Override
             public IVanishManager getVanishManager() {
-                throw new UnsupportedOperationException("VanishManager is only available for the Bookshelf plugin! Please install Bookshelf to use this feature.");
+                throw new UnsupportedOperationException("VanishManager is only available with the Bookshelf plugin! Please install Bookshelf to use this feature.");
             }
         };
     }
