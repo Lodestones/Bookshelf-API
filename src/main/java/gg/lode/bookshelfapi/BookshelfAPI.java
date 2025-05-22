@@ -1,7 +1,10 @@
 package gg.lode.bookshelfapi;
 
 import gg.lode.bookshelfapi.api.manager.*;
-import gg.lode.bookshelfapi.api.manager.impl.*;
+import gg.lode.bookshelfapi.api.manager.impl.APIChatManager;
+import gg.lode.bookshelfapi.api.manager.impl.APICooldownManager;
+import gg.lode.bookshelfapi.api.manager.impl.APICustomItemManager;
+import gg.lode.bookshelfapi.api.manager.impl.APIMenuManager;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -35,16 +38,12 @@ public class BookshelfAPI {
                     .useMenuManager(false)
                     .useCooldownManager(false)
                     .useChatManager(false)
-                    .useGameManager(false)
-                    .usePlayerManager(false)
                     .useItemManager(false);
         }
 
         private boolean shouldRegisterMenuManager = true;
         private boolean shouldRegisterCooldownManager = true;
         private boolean shouldRegisterChatManager = true;
-        private boolean shouldRegisterGameManager = true;
-        private boolean shouldRegisterPlayerManager = true;
         private boolean shouldRegisterItemManager = true;
 
         public Builder useMenuManager(boolean shouldRegisterMenuManager) {
@@ -59,16 +58,6 @@ public class BookshelfAPI {
 
         public Builder useChatManager(boolean shouldRegisterChatManager) {
             this.shouldRegisterChatManager = shouldRegisterChatManager;
-            return this;
-        }
-
-        public Builder useGameManager(boolean shouldRegisterGameManager) {
-            this.shouldRegisterGameManager = shouldRegisterGameManager;
-            return this;
-        }
-
-        public Builder usePlayerManager(boolean shouldRegisterPlayerManager) {
-            this.shouldRegisterPlayerManager = shouldRegisterPlayerManager;
             return this;
         }
 
@@ -106,8 +95,6 @@ public class BookshelfAPI {
             private final APIMenuManager menuManager = builder.shouldRegisterMenuManager ? new APIMenuManager(plugin) : null;
             private final APICooldownManager cooldownManager = builder.shouldRegisterCooldownManager ? new APICooldownManager(plugin) : null;
             private final APIChatManager chatManager = builder.shouldRegisterChatManager ? new APIChatManager(plugin) : null;
-            private final APIGameManager gameManager = builder.shouldRegisterGameManager ? new APIGameManager(plugin) : null;
-            private final APIPlayerManager playerManager = builder.shouldRegisterPlayerManager ? new APIPlayerManager(plugin) : null;
             private final APICustomItemManager itemManager = builder.shouldRegisterItemManager ? new APICustomItemManager(plugin) : null;
 
             @Override
@@ -139,20 +126,12 @@ public class BookshelfAPI {
 
             @Override
             public IGameManager getGameManager() {
-                if (builder.shouldRegisterGameManager) {
-                    return gameManager;
-                } else {
-                    throw new UnsupportedOperationException("GameManager is disabled, please enable it in BookshelfAPI.Builder!");
-                }
+                throw new UnsupportedOperationException("GameManager is only available with the Bookshelf plugin! Please install Bookshelf to use this feature.");
             }
 
             @Override
             public IPlayerManager getPlayerManager() {
-                if (builder.shouldRegisterPlayerManager) {
-                    return playerManager;
-                } else {
-                    throw new UnsupportedOperationException("PlayerManager is disabled, please enable it in BookshelfAPI.Builder!");
-                }
+                throw new UnsupportedOperationException("PlayerManager is only available with the Bookshelf plugin! Please install Bookshelf to use this feature.");
             }
 
             @Override
