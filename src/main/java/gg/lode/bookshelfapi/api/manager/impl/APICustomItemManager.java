@@ -14,7 +14,6 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class APICustomItemManager implements ICustomItemManager {
-    private static final ConcurrentHashMap<Plugin, APICustomItemManager> instances = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, CustomItem> items = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<CustomItem, String> mirroredItems = new ConcurrentHashMap<>();
     private final Plugin plugin;
