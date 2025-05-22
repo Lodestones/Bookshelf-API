@@ -28,8 +28,12 @@ public class MiniMessageUtil {
      * @param args
      * @return
      */
-    public static Component deserialize(String str, Object ...args) {
+    public static Component deserialize(String str, Object... args) {
         return MINI_MESSAGE.deserialize(String.format(str, args));
+    }
+
+    public static Component deserialize(Object str, Object... args) {
+        return MINI_MESSAGE.deserialize(String.format(String.valueOf(str), args));
     }
 
     /**
