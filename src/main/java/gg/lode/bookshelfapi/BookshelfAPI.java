@@ -1,7 +1,6 @@
 package gg.lode.bookshelfapi;
 
 import gg.lode.bookshelfapi.api.manager.*;
-import gg.lode.bookshelfapi.api.manager.impl.APIChatManager;
 import gg.lode.bookshelfapi.api.manager.impl.APICooldownManager;
 import gg.lode.bookshelfapi.api.manager.impl.APICustomItemManager;
 import gg.lode.bookshelfapi.api.manager.impl.APIMenuManager;
@@ -43,7 +42,6 @@ public class BookshelfAPI {
 
         private boolean shouldRegisterMenuManager = true;
         private boolean shouldRegisterCooldownManager = true;
-        private boolean shouldRegisterChatManager = true;
         private boolean shouldRegisterItemManager = true;
 
         public Builder useMenuManager(boolean shouldRegisterMenuManager) {
@@ -57,7 +55,6 @@ public class BookshelfAPI {
         }
 
         public Builder useChatManager(boolean shouldRegisterChatManager) {
-            this.shouldRegisterChatManager = shouldRegisterChatManager;
             return this;
         }
 
@@ -94,7 +91,6 @@ public class BookshelfAPI {
         BookshelfAPI.api = new IBookshelfAPI() {
             private final APIMenuManager menuManager = builder.shouldRegisterMenuManager ? new APIMenuManager(plugin) : null;
             private final APICooldownManager cooldownManager = builder.shouldRegisterCooldownManager ? new APICooldownManager(plugin) : null;
-            private final APIChatManager chatManager = builder.shouldRegisterChatManager ? new APIChatManager(plugin) : null;
             private final APICustomItemManager itemManager = builder.shouldRegisterItemManager ? new APICustomItemManager(plugin) : null;
 
             @Override
@@ -117,11 +113,7 @@ public class BookshelfAPI {
 
             @Override
             public IChatManager getChatManager() {
-                if (builder.shouldRegisterChatManager) {
-                    return chatManager;
-                } else {
-                    throw new UnsupportedOperationException("ChatManager is disabled, please enable it in BookshelfAPI.Builder!");
-                }
+                throw new UnsupportedOperationException("ChatManager is only available with the Bookshelf plugin! Please install Bookshelf to use this feature.");
             }
 
             @Override
