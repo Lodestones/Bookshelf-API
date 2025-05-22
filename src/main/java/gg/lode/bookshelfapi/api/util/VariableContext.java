@@ -8,7 +8,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class VariableContext {
-    private static final Pattern PLACEHOLDER_PATTERN = Pattern.compile("<([a-zA-Z0-9_<>]+?)(?::([a-zA-Z]))?>");
+
+    private static final Pattern PLACEHOLDER_PATTERN = Pattern.compile("<([^<>]+?)(?::([a-zA-Z]))?>");
     private final Map<String, String> variables = new HashMap<>();
 
     // Define or update a variable
