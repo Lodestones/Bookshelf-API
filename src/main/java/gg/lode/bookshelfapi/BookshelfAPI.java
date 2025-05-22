@@ -36,7 +36,6 @@ public class BookshelfAPI {
             return new Builder()
                     .useMenuManager(false)
                     .useCooldownManager(false)
-                    .useChatManager(false)
                     .useItemManager(false);
         }
 
@@ -51,10 +50,6 @@ public class BookshelfAPI {
 
         public Builder useCooldownManager(boolean shouldRegisterCooldownManager) {
             this.shouldRegisterCooldownManager = shouldRegisterCooldownManager;
-            return this;
-        }
-
-        public Builder useChatManager(boolean shouldRegisterChatManager) {
             return this;
         }
 
