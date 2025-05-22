@@ -14,6 +14,8 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class APICustomItemManager implements ICustomItemManager {
+
+    private static final String ID = "custom_item";
     private final ConcurrentHashMap<String, CustomItem> items = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<CustomItem, String> mirroredItems = new ConcurrentHashMap<>();
     private final Plugin plugin;
@@ -21,7 +23,7 @@ public class APICustomItemManager implements ICustomItemManager {
 
     public APICustomItemManager(Plugin plugin) {
         this.plugin = plugin;
-        this.itemKey = new NamespacedKey(plugin, "custom_item");
+        this.itemKey = new NamespacedKey(plugin, ID);
     }
 
     @Override
