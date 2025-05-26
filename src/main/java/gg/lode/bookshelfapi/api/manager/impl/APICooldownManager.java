@@ -5,15 +5,18 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public class APICooldownManager extends BukkitRunnable implements ICooldownManager {
     private final JavaPlugin plugin;
     private final Map<String, Long> cooldowns = new HashMap<>();
+    private final Map<String, BukkitTask> callbacks = new HashMap<>();
 
     public APICooldownManager(JavaPlugin plugin) {
         this.plugin = plugin;
@@ -28,6 +31,35 @@ public class APICooldownManager extends BukkitRunnable implements ICooldownManag
     @Override
     public void setCooldown(String id, long milliseconds) {
         cooldowns.put(id, System.currentTimeMillis() + milliseconds);
+    }
+
+    @Override
+    public void setCooldown(Player player, String id, long milliseconds, Consumer<Player> callback) {
+        cooldowns.put(player.getUniqueId() + "-" + id, System.currentTimeMillis() + milliseconds);
+        if (callbacks.containsKey(player.getUniqueId() + "-" + id)) {
+            callbacks.get(player.getUniqueId() + "-" + id).cancel();
+        }
+
+        callbacks.put(player.getUniqueId() + "-" + id, plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+            if (callback != null) {
+                callback.accept(player);
+            }
+        }, (milliseconds / 1000) * 20));
+    }
+
+    @Override
+    public void setCooldown(String id, long milliseconds, Consumer<Player> callback) {
+        cooldowns.put(id, System.currentTimeMillis() + milliseconds);
+
+        if (callbacks.containsKey(id)) {
+            callbacks.get(id).cancel();
+        }
+
+        callbacks.put(id, plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+            if (callback != null) {
+                callback.accept(null);
+            }
+        }, (milliseconds / 1000) * 20));
     }
 
     @Override
