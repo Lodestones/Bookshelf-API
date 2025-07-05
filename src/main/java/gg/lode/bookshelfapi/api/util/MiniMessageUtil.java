@@ -10,6 +10,7 @@ import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -19,14 +20,15 @@ public class MiniMessageUtil {
     private static final int MAX = 1280; // How big your screen is.
     private static final Style STYLE = Style.style().font(Key.key("space")).build();
     private static final MiniMessage MINI_MESSAGE = MiniMessage.miniMessage();
+    private static final PlainTextComponentSerializer PLAIN_TEXT_SERIALIZER = PlainTextComponentSerializer.plainText();
 
     /**
      * MiniMessage formatting utility, with String.format support built in.
      * <a href="https://docs.advntr.dev/minimessage/format.html">Read the MiniMessage Docs</a>
      *
-     * @param str
-     * @param args
-     * @return
+     * @param str  The {@link String} to deserialize.
+     * @param args The {@link Object} arguments to format the string with.
+     * @return A converted {@link Component}.
      */
     public static Component deserialize(String str, Object... args) {
         return MINI_MESSAGE.deserialize(String.format(str, args));
@@ -137,7 +139,7 @@ public class MiniMessageUtil {
     }
 
     /**
-     * A method that allows the capability to create multiple components without it bleeding into incoming components.
+     * A method that allows the capability to create multiple components without it bleeding into other components.
      *
      * @param components A {@link List} of {@link Component}
      * @return A single {@link Component}.
@@ -197,7 +199,7 @@ public class MiniMessageUtil {
      * @return A serialized {@link String}.
      */
     public static String serialize(Component paramComponent) {
-        String str = MINI_MESSAGE.serialize(paramComponent);
+        String str = PLAIN_TEXT_SERIALIZER.serialize(paramComponent);
         return str.replace("\\<", "<");
     }
 
