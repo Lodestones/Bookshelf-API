@@ -1,10 +1,10 @@
 package gg.lode.bookshelfapi.api.kyori;
 
-import gg.lode.bookshelfapi.api.util.MiniMessageUtil;
+import gg.lode.bookshelfapi.api.util.MiniMessageHelper;
 
 /**
  * An enum utility that calculates the length of a pixel through hardcoding.
- * This is used for {@link MiniMessageUtil}'s centering utility method.
+ * This is used for {@link MiniMessageHelper}'s centering utility method.
  *
  * @author John Aquino
  */

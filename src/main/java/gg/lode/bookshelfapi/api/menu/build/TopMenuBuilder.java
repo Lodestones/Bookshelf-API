@@ -1,6 +1,6 @@
 package gg.lode.bookshelfapi.api.menu.build;
 
-import gg.lode.bookshelfapi.api.util.MiniMessageUtil;
+import gg.lode.bookshelfapi.api.util.MiniMessageHelper;
 import net.kyori.adventure.text.Component;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
@@ -84,7 +84,7 @@ public class TopMenuBuilder extends MenuBuilder {
     }
 
     public TopMenuBuilder setTitle(String title, Object... args) {
-        this.title = MiniMessageUtil.deserialize(title, args);
+        this.title = MiniMessageHelper.deserialize(title, args);
         return this;
     }
 

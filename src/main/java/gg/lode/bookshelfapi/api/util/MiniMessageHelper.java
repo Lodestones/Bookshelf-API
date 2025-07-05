@@ -15,7 +15,7 @@ import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class MiniMessageUtil {
+public class MiniMessageHelper {
     private final static int CENTER_PX = 154; // The size of the chat.
     private static final int MAX = 1280; // How big your screen is.
     private static final Style STYLE = Style.style().font(Key.key("space")).build();
@@ -63,7 +63,7 @@ public class MiniMessageUtil {
         return Wrap.of(String.format(str, args), 50)
                 .get()
                 .stream()
-                .map(MiniMessageUtil::getCenteredMessage)
+                .map(MiniMessageHelper::getCenteredMessage)
                 .map(MINI_MESSAGE::deserialize)
                 .collect(Collectors.toList());
     }

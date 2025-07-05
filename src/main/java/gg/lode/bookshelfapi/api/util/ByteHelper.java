@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-public class ByteUtil {
+public class ByteHelper {
 
     private static final HashMap<String, String> gzipCache = new HashMap<>();
 

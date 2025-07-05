@@ -6,7 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
 
-public class PackUtil {
+public class PackHelper {
 
     public static byte[] convertHexToByteArray(String hexString) {
         int length = hexString.length();

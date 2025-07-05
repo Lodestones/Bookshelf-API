@@ -20,7 +20,7 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.UUID;
 
-public class ChatHeadUtil {
+public class ChatHeadHelper {
     private static final HashMap<UUID, String> cachedSkinUrls = new HashMap<>();
 
     public static String saturateColor(String primaryHex, String saturaterHex, double saturationFactor) {
@@ -114,12 +114,12 @@ public class ChatHeadUtil {
                 Component component = Component.empty();
                 if (i != 7 && i != 15 && i != 23 && i != 31 && i != 39 && i != 47 && i != 55) {
                     if (i == 63) {
-                        component = component.append(MiniMessageUtil.deserialize("%s", (char) unicodeChar));
+                        component = component.append(MiniMessageHelper.deserialize("%s", (char) unicodeChar));
                     } else {
-                        component = component.append(MiniMessageUtil.deserialize("%s%s", (char) unicodeChar, "\uf102"));
+                        component = component.append(MiniMessageHelper.deserialize("%s%s", (char) unicodeChar, "\uf102"));
                     }
                 } else {
-                    component = component.append(MiniMessageUtil.deserialize("%s%s", (char) unicodeChar, "\uf101"));
+                    component = component.append(MiniMessageHelper.deserialize("%s%s", (char) unicodeChar, "\uf101"));
                 }
 
                 if (saturateWith == null) {

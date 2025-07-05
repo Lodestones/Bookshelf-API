@@ -10,7 +10,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-public class InventoryUtil {
+public class InventoryHelper {
 
     public static byte @Nullable [] serialize(ItemStack[] contents) {
         try {

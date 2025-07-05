@@ -3,7 +3,7 @@ package gg.lode.bookshelfapi.api.util;
 import org.bukkit.Location;
 import org.bukkit.util.Vector;
 
-public class LocationUtil {
+public class LocationHelper {
 
     public static Vector getDirection(Location startLocation, Location targetLocation) {
         return targetLocation.toVector().subtract(startLocation.toVector()).normalize();

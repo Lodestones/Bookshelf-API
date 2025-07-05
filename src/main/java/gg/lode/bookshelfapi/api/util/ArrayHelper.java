@@ -4,12 +4,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class ArrayUtil {
+public class ArrayHelper {
 
     /**
      * Chunks the given list of players into sublists of the specified size.
      *
-     * @param players the list of players to chunk
+     * @param players   the list of players to chunk
      * @param chunkSize the desired size of each chunk
      * @return a list of chunks, where each chunk is a list of players
      */

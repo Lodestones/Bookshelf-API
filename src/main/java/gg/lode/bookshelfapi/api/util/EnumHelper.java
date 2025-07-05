@@ -1,6 +1,6 @@
 package gg.lode.bookshelfapi.api.util;
 
-public class EnumUtil {
+public class EnumHelper {
     public static <T extends Enum<T>> T fetchEnum(Class<T> enumClass, String value) {
         try {
             if (value == null)

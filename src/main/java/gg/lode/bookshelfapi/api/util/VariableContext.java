@@ -41,7 +41,7 @@ public class VariableContext {
 
     public Component replaceAsComponent(String input) {
         String result = replace(input);
-        return MiniMessageUtil.deserialize(result);
+        return MiniMessageHelper.deserialize(result);
     }
 
     // Replace <var[:formatter]> recursively

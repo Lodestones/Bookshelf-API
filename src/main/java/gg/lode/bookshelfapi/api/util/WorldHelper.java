@@ -13,7 +13,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.util.Random;
 
-public class WorldUtil {
+public class WorldHelper {
 
     public static World createWorld(String worldName) {
         return new WorldCreator(worldName)

@@ -5,7 +5,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class StringUtil {
+public class StringHelper {
 
     private static final Pattern PLACEHOLDER_PATTERN = Pattern.compile("\\{(.*?)\\}");
     private static final Map<Character, Integer> romanValues = new HashMap<>();

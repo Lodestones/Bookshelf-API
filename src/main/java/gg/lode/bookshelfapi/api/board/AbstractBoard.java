@@ -1,6 +1,6 @@
 package gg.lode.bookshelfapi.api.board;
 
-import gg.lode.bookshelfapi.api.util.MiniMessageUtil;
+import gg.lode.bookshelfapi.api.util.MiniMessageHelper;
 import net.kyori.adventure.text.Component;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
@@ -41,7 +41,7 @@ public abstract class AbstractBoard {
     }
 
     public void setTitle(String title) {
-        setTitle(MiniMessageUtil.deserialize(title));
+        setTitle(MiniMessageHelper.deserialize(title));
     }
 
     public void setTitle(Component title) {
@@ -51,7 +51,7 @@ public abstract class AbstractBoard {
     }
 
     private void setSlot(int slot, String text) {
-        setSlot(slot, MiniMessageUtil.deserialize(text));
+        setSlot(slot, MiniMessageHelper.deserialize(text));
     }
 
     private void setSlot(int slot, Component text) {

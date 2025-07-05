@@ -2,7 +2,7 @@ package gg.lode.bookshelfapi.api.item;
 
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
-import gg.lode.bookshelfapi.api.util.MiniMessageUtil;
+import gg.lode.bookshelfapi.api.util.MiniMessageHelper;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -177,7 +177,7 @@ public class ItemBuilder {
     public ItemBuilder title(String title) {
         if (title == null)
             return this;
-        this.title = MiniMessageUtil.deserialize(title).decoration(TextDecoration.ITALIC, false);
+        this.title = MiniMessageHelper.deserialize(title).decoration(TextDecoration.ITALIC, false);
         return this;
     }
 
@@ -242,7 +242,7 @@ public class ItemBuilder {
     }
 
     public ItemBuilder lore(String... lores) {
-        this.lore = Arrays.stream(lores).map(MiniMessageUtil::deserialize).map(c -> c.decoration(TextDecoration.ITALIC, false)).toList();
+        this.lore = Arrays.stream(lores).map(MiniMessageHelper::deserialize).map(c -> c.decoration(TextDecoration.ITALIC, false)).toList();
         return this;
     }
 
@@ -251,7 +251,7 @@ public class ItemBuilder {
     }
 
     public String loreString() {
-        return this.lore.stream().map(MiniMessageUtil::serialize).collect(Collectors.joining("\n"));
+        return this.lore.stream().map(MiniMessageHelper::serialize).collect(Collectors.joining("\n"));
     }
 
     public ItemBuilder flags() {
