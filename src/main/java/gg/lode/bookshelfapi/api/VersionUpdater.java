@@ -94,60 +94,68 @@ public class VersionUpdater implements Listener {
         return null;
     }
 
+    /**
+     * @return true if latestVersion > currentVersion, false otherwise.
+     */
     private boolean isNewerVersion(String latestVersion, String currentVersion) {
+        // 1) remove build metadata
+        String latestCore = latestVersion.split("\\+")[0];
+        String currentCore = currentVersion.split("\\+")[0];
 
-        // Unfortunately, we would have to support old versions.
-        // Will be deprecated before v1.1.0
-        latestVersion = latestVersion
-                .replaceAll("beta", "")
-                .replaceAll("alpha", "")
-                .replaceAll("private", "")
-                .replaceAll("-", "")
-                .replaceAll("v", "");
+        // 2) split into [core, preRelease?]
+        String[] latestSplit = latestCore.split("-", 2);
+        String[] currentSplit = currentCore.split("-", 2);
+        String[] latestNums = latestSplit[0].split("\\.");
+        String[] currentNums = currentSplit[0].split("\\.");
 
-        currentVersion = currentVersion
-                .replaceAll("beta", "")
-                .replaceAll("alpha", "")
-                .replaceAll("private", "")
-                .replaceAll("-", "")
-                .replaceAll("v", "");
+        // 3) compare numeric segments
+        int max = Math.max(latestNums.length, currentNums.length);
+        for (int i = 0; i < max; i++) {
+            int l = i < latestNums.length ? Integer.parseInt(latestNums[i]) : 0;
+            int c = i < currentNums.length ? Integer.parseInt(currentNums[i]) : 0;
+            if (l > c) return true;
+            if (l < c) return false;
+        }
 
-        String[] latestParts = latestVersion.split("\\+")[0].split("-");
-        String[] currentParts = currentVersion.split("\\+")[0].split("-");
+        // 4) both cores are equal → handle pre-release
+        boolean hasLatestPre = latestSplit.length > 1;
+        boolean hasCurrentPre = currentSplit.length > 1;
 
-        String[] latestVersionParts = latestParts[0].split("\\.");
-        String[] currentVersionParts = currentParts[0].split("\\.");
+        // no pre on either → exact match
+        if (!hasLatestPre && !hasCurrentPre) return false;
+        // final (no pre) always > any pre
+        if (!hasLatestPre) return true;
+        if (!hasCurrentPre) return false;
 
-        int maxLength = Math.max(latestVersionParts.length, currentVersionParts.length);
+        // both have pre → compare identifiers by SemVer rules
+        return comparePreRelease(latestSplit[1], currentSplit[1]) > 0;
+    }
 
-        for (int i = 0; i < maxLength; i++) {
-            int latestPart = i < latestVersionParts.length ? Integer.parseInt(latestVersionParts[i]) : 0;
-            int currentPart = i < currentVersionParts.length ? Integer.parseInt(currentVersionParts[i]) : 0;
-
-            if (latestPart > currentPart) {
-                return true;
+    /**
+     * @return >0 if a>b, 0 if equal, <0 if a<b
+     */
+    private int comparePreRelease(String a, String b) {
+        String[] aParts = a.split("\\.");
+        String[] bParts = b.split("\\.");
+        int max = Math.max(aParts.length, bParts.length);
+        for (int i = 0; i < max; i++) {
+            if (i >= aParts.length) return -1;      // a shorter → lower precedence
+            if (i >= bParts.length) return +1;      // b shorter → a higher
+            String ap = aParts[i], bp = bParts[i];
+            boolean aNum = ap.matches("\\d+"), bNum = bp.matches("\\d+");
+            if (aNum && bNum) {
+                int ai = Integer.parseInt(ap), bi = Integer.parseInt(bp);
+                if (ai != bi) return ai - bi;
+            } else if (aNum) {
+                return -1;  // numeric < non-numeric
+            } else if (bNum) {
+                return +1;
+            } else {
+                int cmp = ap.compareTo(bp);
+                if (cmp != 0) return cmp;
             }
-
-            if (latestPart < currentPart) {
-                return false;
-            }
         }
-
-        // Handle pre-release versions (e.g., 1.0.0-alpha)
-        if (latestParts.length > 1 && currentParts.length == 1) {
-            // A pre-release version is always less than a final version
-            return false;
-        }
-        if (currentParts.length > 1 && latestParts.length == 1) {
-            // A final version is always greater than a pre-release version
-            return true;
-        }
-        if (latestParts.length > 1 && currentParts.length > 1) {
-            // Compare pre-release versions lexicographically
-            return latestParts[1].compareTo(currentParts[1]) > 0;
-        }
-
-        return false;
+        return 0;
     }
 
 }
