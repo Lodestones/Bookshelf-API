@@ -4,8 +4,11 @@ import gg.lode.bookshelfapi.api.manager.*;
 
 public interface IBookshelfAPI {
 
+    IScoreboardManager getScoreboardManager();
+
     /**
      * Fetches the Menu Manager.
+     *
      * @return The {@link IMenuManager} instance.
      */
     IMenuManager getMenuManager();

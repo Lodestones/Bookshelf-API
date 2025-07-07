@@ -5,6 +5,7 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.*;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -17,6 +18,7 @@ public abstract class AbstractBoard {
     protected final Objective sidebar;
 
     protected final Player player;
+    protected final TabList tabList;
 
     public AbstractBoard(Player player, Component title) {
         Scoreboard scoreboard = player.getScoreboard();
@@ -25,11 +27,17 @@ public abstract class AbstractBoard {
         this.sidebar = sidebar;
         this.sidebar.setDisplaySlot(DisplaySlot.SIDEBAR);
         this.player = player;
+        this.tabList = new TabList(null, null);
+
         for (int i = 1; i <= 15; i++) {
             Team team = scoreboard.getTeam(ID + player.hashCode() + "_" + i);
             if (team == null) team = scoreboard.registerNewTeam(ID + player.hashCode() + "_" + i);
             team.addEntry(generateEntry(i));
         }
+    }
+
+    private void setLine(int slot, String text) {
+        setLine(slot, MiniMessageHelper.deserialize(text));
     }
 
     public AbstractBoard(Player player) {
@@ -50,11 +58,7 @@ public abstract class AbstractBoard {
         this.sidebar.displayName(title);
     }
 
-    private void setSlot(int slot, String text) {
-        setSlot(slot, MiniMessageHelper.deserialize(text));
-    }
-
-    private void setSlot(int slot, Component text) {
+    private void setLine(int slot, Component text) {
         Scoreboard scoreboard = player.getScoreboard();
         if (slot <= 15) {
             Team team = scoreboard.getTeam(ID + player.hashCode() + "_" + slot);
@@ -67,33 +71,37 @@ public abstract class AbstractBoard {
         }
     }
 
-    protected void setSlotsFromList(List<String> list) {
+    protected void setLineFromList(List<String> list) {
         AtomicInteger slot = new AtomicInteger(list.size());
         if (slot.get() < MAX_LINES)
             for (int i = slot.get() + 1; i <= MAX_LINES; i++)
-                removeSlot(i);
+                removeLine(i);
         list.forEach(line -> {
-            setSlot(slot.get(), line);
+            setLine(slot.get(), line);
             slot.getAndDecrement();
         });
     }
 
-    protected void setSlotsFromComponentList(List<Component> list) {
+    protected void setLineFromComponentsList(List<Component> list) {
         AtomicInteger slot = new AtomicInteger(list.size());
         if (slot.get() < MAX_LINES)
             for (int i = slot.get() + 1; i <= MAX_LINES; i++)
-                removeSlot(i);
+                removeLine(i);
         list.forEach(line -> {
-            setSlot(slot.get(), line);
+            setLine(slot.get(), line);
             slot.getAndDecrement();
         });
     }
 
-    private void removeSlot(int slot) {
+    private void removeLine(int slot) {
         Scoreboard scoreboard = player.getScoreboard();
         String entry = generateEntry(slot);
         if (scoreboard.getEntries().contains(entry))
             scoreboard.resetScores(entry);
+    }
+
+    public TabList getTabList() {
+        return tabList;
     }
 
     @SuppressWarnings("deprecation")
@@ -102,4 +110,30 @@ public abstract class AbstractBoard {
     }
 
     public abstract void update();
+
+    public static class TabList {
+        private @Nullable Component topTabList;
+        private @Nullable Component bottomTabList;
+
+        public TabList(@Nullable Component topTabList, @Nullable Component bottomTabList) {
+            this.topTabList = topTabList;
+            this.bottomTabList = bottomTabList;
+        }
+
+        public @Nullable Component getBottomTabList() {
+            return bottomTabList;
+        }
+
+        public void setBottomTabList(@Nullable Component bottomTabList) {
+            this.bottomTabList = bottomTabList;
+        }
+
+        public @Nullable Component getTopTabList() {
+            return topTabList;
+        }
+
+        public void setTopTabList(@Nullable Component topTabList) {
+            this.topTabList = topTabList;
+        }
+    }
 }

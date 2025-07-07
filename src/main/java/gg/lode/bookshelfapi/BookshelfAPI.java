@@ -4,6 +4,7 @@ import gg.lode.bookshelfapi.api.manager.*;
 import gg.lode.bookshelfapi.api.manager.impl.APICooldownManager;
 import gg.lode.bookshelfapi.api.manager.impl.APICustomItemManager;
 import gg.lode.bookshelfapi.api.manager.impl.APIMenuManager;
+import gg.lode.bookshelfapi.api.manager.impl.APIScoreboardManager;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -16,62 +17,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 public class BookshelfAPI {
 
     private static IBookshelfAPI api;
-
-    public static class Builder {
-
-        /**
-         * Creates a builder that allows you to set which managers to register.
-         * @return A builder that allows you to set which managers to register.
-         */
-        public static Builder create() {
-            return new Builder();
-        }
-
-        /**
-         * Creates a builder that disables all managers.
-         * This is useful for plugins that do not want to use the API.
-         * @return A builder that disables all managers.
-         */
-        public static Builder createDisabled() {
-            return new Builder()
-                    .useMenuManager(false)
-                    .useCooldownManager(false)
-                    .useItemManager(false);
-        }
-
-        private boolean shouldRegisterMenuManager = true;
-        private boolean shouldRegisterCooldownManager = true;
-        private boolean shouldRegisterItemManager = true;
-
-        public Builder useMenuManager(boolean shouldRegisterMenuManager) {
-            this.shouldRegisterMenuManager = shouldRegisterMenuManager;
-            return this;
-        }
-
-        public Builder useCooldownManager(boolean shouldRegisterCooldownManager) {
-            this.shouldRegisterCooldownManager = shouldRegisterCooldownManager;
-            return this;
-        }
-
-        public Builder useItemManager(boolean shouldRegisterItemManager) {
-            this.shouldRegisterItemManager = shouldRegisterItemManager;
-            return this;
-        }
-
-    }
-
-    /**
-     * Initializes the API.
-     * This can be used if plugins attempt to shade the API into their plugin.
-     * <p>
-     * Remember to relocate the API to avoid conflicts with other plugins that uses the main plugin.
-     * This method enables all managers. So note which plugins you use as other plugins may have registered their own Bookshelf API.
-     *
-     * @param plugin The main plugin that is using the API.
-     */
-    public static void init(JavaPlugin plugin) {
-        init(plugin, Builder.create());
-    }
 
     /**
      * Initializes the API.
@@ -87,6 +32,16 @@ public class BookshelfAPI {
             private final APIMenuManager menuManager = builder.shouldRegisterMenuManager ? new APIMenuManager(plugin) : null;
             private final APICooldownManager cooldownManager = builder.shouldRegisterCooldownManager ? new APICooldownManager(plugin) : null;
             private final APICustomItemManager itemManager = builder.shouldRegisterItemManager ? new APICustomItemManager(plugin) : null;
+            private final APIScoreboardManager scoreboardManager = builder.shouldRegisterScoreboardManager ? new APIScoreboardManager(plugin) : null;
+
+            @Override
+            public IScoreboardManager getScoreboardManager() {
+                if (builder.shouldRegisterScoreboardManager) {
+                    return scoreboardManager;
+                } else {
+                    throw new UnsupportedOperationException("ScoreboardManager is disabled, please enable it in BookshelfAPI.Builder!");
+                }
+            }
 
             @Override
             public IMenuManager getMenuManager() {
@@ -135,6 +90,70 @@ public class BookshelfAPI {
                 throw new UnsupportedOperationException("VanishManager is only available with the Bookshelf plugin! Please install Bookshelf to use this feature.");
             }
         };
+    }
+
+    /**
+     * Initializes the API.
+     * This can be used if plugins attempt to shade the API into their plugin.
+     * <p>
+     * Remember to relocate the API to avoid conflicts with other plugins that uses the main plugin.
+     * This method enables all managers. So note which plugins you use as other plugins may have registered their own Bookshelf API.
+     *
+     * @param plugin The main plugin that is using the API.
+     */
+    public static void init(JavaPlugin plugin) {
+        init(plugin, Builder.create());
+    }
+
+    public static class Builder {
+
+        /**
+         * Creates a builder that allows you to set which managers to register.
+         * @return A builder that allows you to set which managers to register.
+         */
+        public static Builder create() {
+            return new Builder();
+        }
+
+        private boolean shouldRegisterScoreboardManager = true;
+
+        private boolean shouldRegisterMenuManager = true;
+        private boolean shouldRegisterCooldownManager = true;
+        private boolean shouldRegisterItemManager = true;
+
+        /**
+         * Creates a builder that disables all managers.
+         * This is useful for plugins that do not want to use the API.
+         * @return A builder that disables all managers.
+         */
+        public static Builder createDisabled() {
+            return new Builder()
+                    .useMenuManager(false)
+                    .useCooldownManager(false)
+                    .useItemManager(false)
+                    .useScoreboardManager(false);
+        }
+
+        public Builder useScoreboardManager(boolean shouldRegisterScoreboardManager) {
+            this.shouldRegisterScoreboardManager = shouldRegisterScoreboardManager;
+            return this;
+        }
+
+        public Builder useMenuManager(boolean shouldRegisterMenuManager) {
+            this.shouldRegisterMenuManager = shouldRegisterMenuManager;
+            return this;
+        }
+
+        public Builder useCooldownManager(boolean shouldRegisterCooldownManager) {
+            this.shouldRegisterCooldownManager = shouldRegisterCooldownManager;
+            return this;
+        }
+
+        public Builder useItemManager(boolean shouldRegisterItemManager) {
+            this.shouldRegisterItemManager = shouldRegisterItemManager;
+            return this;
+        }
+
     }
 
     /**
