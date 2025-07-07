@@ -78,7 +78,7 @@ Add the dependency
 ```xml
     <dependency>
         <groupId>com.github.Lodestones</groupId>
-        <artifactId>Bookshelf</artifactId>
+        <artifactId>Bookshelf-API</artifactId>
         <version>VERSION</version>
     </dependency>
 ```
