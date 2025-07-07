@@ -78,10 +78,15 @@ public abstract class Menu implements InventoryHolder {
         this.init();
     }
 
+    public void rebuild() {
+        this.inventory.clear();
+        this.init();
+    }
+
     public void open() {
         this.init();
-        topMenuBuilder.getOpenActions().forEach(event -> event.accept(null));
 
+        topMenuBuilder.getOpenActions().forEach(Runnable::run);
         BookshelfAPI.getApi().getMenuManager().register(player.getUniqueId(), this);
 
         // if open inventory is the current, ignore

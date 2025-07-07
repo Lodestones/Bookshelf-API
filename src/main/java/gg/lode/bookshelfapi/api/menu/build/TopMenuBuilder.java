@@ -16,7 +16,7 @@ public class TopMenuBuilder extends MenuBuilder {
     private int rows;
 
     protected List<Consumer<InventoryCloseEvent>> closeActions;
-    protected List<Consumer<Void>> openActions;
+    protected List<Runnable> openActions;
     protected List<Consumer<InventoryClickEvent>> clickActions;
 
     public TopMenuBuilder() {
@@ -36,7 +36,7 @@ public class TopMenuBuilder extends MenuBuilder {
         return this;
     }
 
-    public TopMenuBuilder addOpenAction(Consumer<Void> consumer) {
+    public TopMenuBuilder addOpenAction(Runnable consumer) {
         this.openActions.add(consumer);
         return this;
     }
@@ -121,7 +121,7 @@ public class TopMenuBuilder extends MenuBuilder {
         return title;
     }
 
-    public List<Consumer<Void>> getOpenActions() {
+    public List<Runnable> getOpenActions() {
         return openActions;
     }
 
