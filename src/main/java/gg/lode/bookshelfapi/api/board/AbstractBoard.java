@@ -28,7 +28,7 @@ public abstract class AbstractBoard {
         for (int i = 1; i <= 15; i++) {
             Team team = scoreboard.getTeam(ID + player.hashCode() + "_" + i);
             if (team == null) team = scoreboard.registerNewTeam(ID + player.hashCode() + "_" + i);
-            team.addEntry(genEntry(i));
+            team.addEntry(generateEntry(i));
         }
     }
 
@@ -59,7 +59,7 @@ public abstract class AbstractBoard {
         if (slot <= 15) {
             Team team = scoreboard.getTeam(ID + player.hashCode() + "_" + slot);
             assert team != null;
-            String entry = genEntry(slot);
+            String entry = generateEntry(slot);
             if (!scoreboard.getEntries().contains(entry))
                 this.sidebar.getScore(entry).setScore(slot);
             if (!team.prefix().equals(text))
@@ -91,13 +91,13 @@ public abstract class AbstractBoard {
 
     private void removeSlot(int slot) {
         Scoreboard scoreboard = player.getScoreboard();
-        String entry = genEntry(slot);
+        String entry = generateEntry(slot);
         if (scoreboard.getEntries().contains(entry))
             scoreboard.resetScores(entry);
     }
 
     @SuppressWarnings("deprecation")
-    private String genEntry(int slot) {
+    private String generateEntry(int slot) {
         return ChatColor.values()[slot].toString();
     }
 
