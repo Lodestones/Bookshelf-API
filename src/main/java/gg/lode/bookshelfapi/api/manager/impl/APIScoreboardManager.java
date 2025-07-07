@@ -25,6 +25,7 @@ public class APIScoreboardManager extends BukkitRunnable implements IScoreboardM
         this.plugin = plugin;
 
         startScoreboard(plugin, 1);
+        plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
     @Override
