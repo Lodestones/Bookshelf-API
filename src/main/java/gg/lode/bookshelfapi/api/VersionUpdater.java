@@ -99,8 +99,8 @@ public class VersionUpdater implements Listener {
      */
     private boolean isNewerVersion(String latestVersion, String currentVersion) {
         // 1) remove build metadata
-        String latestCore = latestVersion.split("\\+")[0];
-        String currentCore = currentVersion.split("\\+")[0];
+        String latestCore = latestVersion.replaceAll("v", "").split("\\+")[0];
+        String currentCore = currentVersion.replaceAll("v", "").split("\\+")[0];
 
         // 2) split into [core, preRelease?]
         String[] latestSplit = latestCore.split("-", 2);
