@@ -9,6 +9,49 @@ public class StringHelper {
 
     private static final Pattern PLACEHOLDER_PATTERN = Pattern.compile("\\{(.*?)\\}");
     private static final Map<Character, Integer> romanValues = new HashMap<>();
+    private static final Pattern TIME_PATTERN = Pattern.compile("(\\d+)(ms|[yMdhms])");
+
+    /**
+     * Utility class to parse compact time duration strings into milliseconds.
+     * <p>
+     * Supports the following units:
+     * <ul>
+     *   <li>y  - years (365 days)</li>
+     *   <li>M  - months (30 days)</li>
+     *   <li>d  - days</li>
+     *   <li>h  - hours</li>
+     *   <li>m  - minutes</li>
+     *   <li>s  - seconds</li>
+     *   <li>ms - milliseconds</li>
+     * </ul>
+     * Example inputs: "1y", "2M5d", "4h30m", "10s", "500ms"
+     *
+     * @param input the time string to parse (e.g., "2d4h30m")
+     * @return the total duration in milliseconds, or 0 if input is null or empty
+     */
+    public static long parseShortTimeStringToMillis(String input) {
+        if (input == null || input.isEmpty()) return 0;
+
+        Matcher matcher = TIME_PATTERN.matcher(input);
+        long totalMillis = 0;
+
+        while (matcher.find()) {
+            long value = Long.parseLong(matcher.group(1));
+            String unit = matcher.group(2);
+
+            switch (unit) {
+                case "y" -> totalMillis += value * 365L * 24 * 60 * 60 * 1000;
+                case "M" -> totalMillis += value * 30L * 24 * 60 * 60 * 1000;
+                case "d" -> totalMillis += value * 24L * 60 * 60 * 1000;
+                case "h" -> totalMillis += value * 60L * 60 * 1000;
+                case "m" -> totalMillis += value * 60L * 1000;
+                case "s" -> totalMillis += value * 1000;
+                case "ms" -> totalMillis += value;
+            }
+        }
+
+        return totalMillis;
+    }
 
     static {
         romanValues.put('I', 1);
