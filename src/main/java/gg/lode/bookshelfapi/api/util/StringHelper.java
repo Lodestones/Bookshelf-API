@@ -234,6 +234,10 @@ public class StringHelper {
     }
 
     public static String getTimeDuration(int totalSeconds) {
+        if (totalSeconds <= 0) {
+            return "00:00";
+        }
+
         int hours = totalSeconds / 3600;
         int minutes = (totalSeconds % 3600) / 60;
         int seconds = totalSeconds % 60;
@@ -250,27 +254,78 @@ public class StringHelper {
     }
 
     public static String getTimeString(long milliseconds) {
+        return getTimeString(milliseconds, "Invalid time");
+    }
+
+    public static String getTimeString(long milliseconds, String fallback) {
         if (milliseconds < 0) {
-            return "Invalid time";
+            return fallback;
         }
 
         long seconds = milliseconds / 1000;
         long minutes = seconds / 60;
         long hours = minutes / 60;
+        long days = hours / 24;
+        long months = days / 30;
+        long years = days / 365;
 
+        seconds = seconds % 60;
+        minutes = minutes % 60;
+        hours = hours % 24;
+        days = days % 30;
+        months = months % 12;
+
+        StringBuilder sb = new StringBuilder();
+        if (years > 0) {
+            sb.append(years).append(" year").append(years > 1 ? "s" : "");
+        }
+        if (months > 0) {
+            if (sb.length() > 0) sb.append(", ");
+            sb.append(months).append(" month").append(months > 1 ? "s" : "");
+        }
+        if (days > 0) {
+            if (sb.length() > 0) sb.append(", ");
+            sb.append(days).append(" day").append(days > 1 ? "s" : "");
+        }
         if (hours > 0) {
-            long remainingMinutes = minutes % 60;
-            return hours + " hour" + (hours > 1 ? "s" : "") +
-                    (remainingMinutes > 0 ? " and " + remainingMinutes + " minute" + (remainingMinutes > 1 ? "s" : "") : "");
+            if (sb.length() > 0) sb.append(", ");
+            sb.append(hours).append(" hour").append(hours > 1 ? "s" : "");
         }
-
         if (minutes > 0) {
-            long remainingSeconds = seconds % 60;
-            return minutes + " minute" + (minutes > 1 ? "s" : "") +
-                    (remainingSeconds > 0 ? " and " + remainingSeconds + " second" + (remainingSeconds > 1 ? "s" : "") : "");
+            if (sb.length() > 0) sb.append(", ");
+            sb.append(minutes).append(" minute").append(minutes > 1 ? "s" : "");
+        }
+        if (seconds > 0 || sb.length() == 0) {
+            if (sb.length() > 0) sb.append(", ");
+            sb.append(seconds).append(" second").append(seconds != 1 ? "s" : "");
         }
 
-        return seconds + " second" + (seconds != 1 ? "s" : "");
+        // Replace last comma with 'and' if needed
+        int lastComma = sb.lastIndexOf(", ");
+        if (lastComma != -1 && sb.indexOf(", ") != lastComma) {
+            sb.replace(lastComma, lastComma + 2, " and ");
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Returns a compact time code like "1.32d", "1.02h", or "0.01s" for the given milliseconds.
+     */
+    public static String getShortTimeCode(long milliseconds) {
+        if (milliseconds < 0) return "0s";
+        double seconds = milliseconds / 1000.0;
+        double minutes = seconds / 60.0;
+        double hours = minutes / 60.0;
+        double days = hours / 24.0;
+        double months = days / 30.0;
+        double years = days / 365.0;
+        if (years >= 1) return String.format("%.2f/y", years);
+        if (months >= 1) return String.format("%.2f/mo", months);
+        if (days >= 1) return String.format("%.2f/d", days);
+        if (hours >= 1) return String.format("%.2f/h", hours);
+        if (minutes >= 1) return String.format("%.2f/m", minutes);
+        if (seconds >= 1) return String.format("%.2f/s", seconds);
+        return milliseconds + "/ms";
     }
 
 }
