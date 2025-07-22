@@ -121,6 +121,7 @@ public class APIScoreboardManager extends BukkitRunnable implements IScoreboardM
                     board.update();
 
                     AbstractBoard.TabList tabList = board.getTabList();
+
                     if (tabList.getTopTabList() != null)
                         player.sendPlayerListHeader(tabList.getTopTabList());
 
