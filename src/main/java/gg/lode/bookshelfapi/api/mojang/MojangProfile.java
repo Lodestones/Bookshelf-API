@@ -63,4 +63,30 @@ public class MojangProfile {
 
         return mojangProfile;
     }
+
+    public static MojangProfile getMojangProfileFromUUID(String uuid) throws IOException, ParseException {
+        String apiEndpoint = "https://sessionserver.mojang.com/session/minecraft/profile/" + uuid.replace("-", "");
+        URL url = new URL(apiEndpoint);
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("GET");
+        JSONParser parser = new JSONParser();
+
+        MojangProfile mojangProfile = null;
+        int responseCode = connection.getResponseCode();
+        if (responseCode == HttpURLConnection.HTTP_OK) {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            StringBuilder response = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                response.append(line);
+            }
+            reader.close();
+
+            String jsonResponse = response.toString();
+            JSONObject object = (JSONObject) parser.parse(jsonResponse);
+            mojangProfile = new MojangProfile(object.get("id").toString(), object.get("name").toString());
+        }
+
+        return mojangProfile;
+    }
 }
