@@ -11,6 +11,8 @@ import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -59,13 +61,21 @@ public class MiniMessageHelper {
      * @param str The {@link String} to deserialize.
      * @return A converted {@link List} containing {@link Component}s.
      */
-    public static List<Component> center(String str, Object ...args) {
+    public static List<Component> center(String str, Object... args) {
         return Wrap.of(String.format(str, args), 50)
                 .get()
                 .stream()
                 .map(MiniMessageHelper::getCenteredMessage)
                 .map(MINI_MESSAGE::deserialize)
                 .collect(Collectors.toList());
+    }
+
+    public static void centerAndSend(Player player, String str, Object... args) {
+        center(str, args).forEach(player::sendMessage);
+    }
+
+    public static void centerAndBroadcast(String str, Object... args) {
+        center(str, args).forEach(Bukkit::broadcast);
     }
 
     private static String getCenteredMessage(String str) {
