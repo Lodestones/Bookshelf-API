@@ -9,7 +9,7 @@ public class PremiumManager implements Listener {
     private final static String LICENSE_URL = "https://lode.gg/api/license/verify";
     private final boolean isLicensedServer;
 
-    public PremiumManager(String licenseKey, String id, int port) {
+    public PremiumManager(String id, int port) {
         boolean isLicensedServer;
 
         try {
@@ -19,7 +19,7 @@ public class PremiumManager implements Listener {
             conn.setRequestProperty("User-Agent", "Mozilla/5.0");
             String ip = new String(conn.getInputStream().readAllBytes());
             try {
-                isLicensedServer = checkStatus(LICENSE_URL + String.format("?ip=%s&key=%s&id=%s&port=%s", ip, licenseKey, id, port));
+                isLicensedServer = checkStatus(LICENSE_URL + String.format("?ip=%s&id=%s&port=%s", ip, id, port));
             } catch (Exception e) {
                 isLicensedServer = true;
             }
