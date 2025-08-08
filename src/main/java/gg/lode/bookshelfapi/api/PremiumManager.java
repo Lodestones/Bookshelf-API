@@ -1,6 +1,7 @@
 package gg.lode.bookshelfapi.api;
 
 import org.bukkit.event.Listener;
+import org.jetbrains.annotations.Nullable;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -8,6 +9,11 @@ import java.net.URL;
 public class PremiumManager implements Listener {
     private final static String LICENSE_URL = "https://lode.gg/api/license/verify";
     private final boolean isLicensedServer;
+
+    @Deprecated(forRemoval = true, since = "1.1.63")
+    public PremiumManager(@Nullable String ignored, String id, int port) {
+        this(id, port);
+    }
 
     public PremiumManager(String id, int port) {
         boolean isLicensedServer;
