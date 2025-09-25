@@ -6,4 +6,6 @@ public interface IPlayerManager {
 
     boolean hasGodMode(Player player);
 
+    String getCurrentChatChannel(Player player);
+
 }
