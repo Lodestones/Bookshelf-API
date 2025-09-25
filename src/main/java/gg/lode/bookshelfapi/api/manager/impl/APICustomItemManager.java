@@ -138,6 +138,12 @@ public class APICustomItemManager implements ICustomItemManager, Listener {
         return new ArrayList<>(items.values());
     }
 
+    @Override
+    public void unregister(String id) {
+        CustomItem customItem = items.remove(id);
+        if (customItem != null) mirroredItems.remove(customItem);
+    }
+
     @EventHandler
     public void onAnvil(PrepareAnvilEvent event) {
         CustomItem CustomItem = getItemByItemStack(event.getInventory().getFirstItem());

@@ -33,9 +33,12 @@ public interface ICustomItemManager {
     ItemStack getItemStackById(String id);
 
     ItemBuilder getItemBuilderById(String id);
+
     ItemBuilder getItemBuilderByClass(Class<? extends CustomItem> itemClass);
 
     List<CustomItem> getItems();
+
+    void unregister(String id);
 
 
 }
