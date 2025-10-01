@@ -19,6 +19,15 @@ public final class PaperCapabilities {
     private static final Method SET_GLIDER;           // ItemMeta#setGlider(boolean)
     private static final Method SET_RARITY;           // ItemMeta#setRarity(Enum)
 
+    // Reflective getters (optional, 1.21.4+)
+    private static final Method GET_ITEM_MODEL;       // ItemMeta#getItemModel()
+    private static final Method GET_MAX_STACK_SIZE;   // ItemMeta#getMaxStackSize()
+    private static final Method GET_HIDE_TOOLTIP;     // ItemMeta#isHideTooltip()/getHideTooltip()
+    private static final Method GET_GLINT_OVERRIDE;   // ItemMeta#isEnchantmentGlintOverride()/getEnchantmentGlintOverride()/hasEnchantmentGlintOverride()
+    private static final Method GET_TOOLTIP_STYLE;    // ItemMeta#getTooltipStyle()
+    private static final Method GET_GLIDER;           // ItemMeta#isGlider()/getGlider()
+    private static final Method GET_RARITY;           // ItemMeta#getRarity()
+
     static {
         MethodHandle handle = null;
         Method maxStack = null;
@@ -27,6 +36,13 @@ public final class PaperCapabilities {
         Method tooltipStyle = null;
         Method glider = null;
         Method rarity = null;
+        Method gItemModel = null;
+        Method gMaxStack = null;
+        Method gHideTooltip = null;
+        Method gGlintOverride = null;
+        Method gTooltipStyle = null;
+        Method gGlider = null;
+        Method gRarity = null;
         try {
             handle = MethodHandles.lookup().findVirtual(
                     ItemMeta.class,
@@ -53,6 +69,18 @@ public final class PaperCapabilities {
             } else if ("setRarity".equals(name) && params.length == 1 && params[0].isEnum()) {
                 rarity = m;
             }
+
+            // getters (no params)
+            if (params.length == 0) {
+                if ("getItemModel".equals(name)) gItemModel = m;
+                else if ("getMaxStackSize".equals(name)) gMaxStack = m;
+                else if ("getHideTooltip".equals(name) || "isHideTooltip".equals(name)) gHideTooltip = m;
+                else if ("getEnchantmentGlintOverride".equals(name) || "isEnchantmentGlintOverride".equals(name) || "hasEnchantmentGlintOverride".equals(name))
+                    gGlintOverride = m;
+                else if ("getTooltipStyle".equals(name)) gTooltipStyle = m;
+                else if ("getGlider".equals(name) || "isGlider".equals(name)) gGlider = m;
+                else if ("getRarity".equals(name)) gRarity = m;
+            }
         }
         SET_ITEM_MODEL = handle;
         SET_MAX_STACK_SIZE = maxStack;
@@ -61,6 +89,14 @@ public final class PaperCapabilities {
         SET_TOOLTIP_STYLE = tooltipStyle;
         SET_GLIDER = glider;
         SET_RARITY = rarity;
+
+        GET_ITEM_MODEL = gItemModel;
+        GET_MAX_STACK_SIZE = gMaxStack;
+        GET_HIDE_TOOLTIP = gHideTooltip;
+        GET_GLINT_OVERRIDE = gGlintOverride;
+        GET_TOOLTIP_STYLE = gTooltipStyle;
+        GET_GLIDER = gGlider;
+        GET_RARITY = gRarity;
     }
 
     private PaperCapabilities() {
@@ -133,6 +169,76 @@ public final class PaperCapabilities {
                 SET_RARITY.invoke(meta, enumValue);
             }
         } catch (Throwable ignored) {
+        }
+    }
+
+    // Getter helpers (all optional; return null when unsupported)
+    public static NamespacedKey getItemModelIfSupported(ItemMeta meta) {
+        if (meta == null || GET_ITEM_MODEL == null) return null;
+        try {
+            Object res = GET_ITEM_MODEL.invoke(meta);
+            return (res instanceof NamespacedKey) ? (NamespacedKey) res : null;
+        } catch (Throwable ignored) {
+            return null;
+        }
+    }
+
+    public static Integer getMaxStackSizeIfSupported(ItemMeta meta) {
+        if (meta == null || GET_MAX_STACK_SIZE == null) return null;
+        try {
+            Object res = GET_MAX_STACK_SIZE.invoke(meta);
+            return (res instanceof Integer) ? (Integer) res : null;
+        } catch (Throwable ignored) {
+            return null;
+        }
+    }
+
+    public static Boolean getHideTooltipIfSupported(ItemMeta meta) {
+        if (meta == null || GET_HIDE_TOOLTIP == null) return null;
+        try {
+            Object res = GET_HIDE_TOOLTIP.invoke(meta);
+            return (res instanceof Boolean) ? (Boolean) res : null;
+        } catch (Throwable ignored) {
+            return null;
+        }
+    }
+
+    public static Boolean getEnchantmentGlintOverrideIfSupported(ItemMeta meta) {
+        if (meta == null || GET_GLINT_OVERRIDE == null) return null;
+        try {
+            Object res = GET_GLINT_OVERRIDE.invoke(meta);
+            return (res instanceof Boolean) ? (Boolean) res : null;
+        } catch (Throwable ignored) {
+            return null;
+        }
+    }
+
+    public static NamespacedKey getTooltipStyleIfSupported(ItemMeta meta) {
+        if (meta == null || GET_TOOLTIP_STYLE == null) return null;
+        try {
+            Object res = GET_TOOLTIP_STYLE.invoke(meta);
+            return (res instanceof NamespacedKey) ? (NamespacedKey) res : null;
+        } catch (Throwable ignored) {
+            return null;
+        }
+    }
+
+    public static Boolean getGliderIfSupported(ItemMeta meta) {
+        if (meta == null || GET_GLIDER == null) return null;
+        try {
+            Object res = GET_GLIDER.invoke(meta);
+            return (res instanceof Boolean) ? (Boolean) res : null;
+        } catch (Throwable ignored) {
+            return null;
+        }
+    }
+
+    public static Object getRarityIfSupported(ItemMeta meta) {
+        if (meta == null || GET_RARITY == null) return null;
+        try {
+            return GET_RARITY.invoke(meta);
+        } catch (Throwable ignored) {
+            return null;
         }
     }
 
