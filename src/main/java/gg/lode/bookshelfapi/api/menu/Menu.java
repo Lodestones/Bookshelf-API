@@ -4,6 +4,9 @@ import gg.lode.bookshelfapi.BookshelfAPI;
 import gg.lode.bookshelfapi.api.menu.build.MenuBuilder;
 import gg.lode.bookshelfapi.api.menu.build.RowBuilder;
 import gg.lode.bookshelfapi.api.menu.build.TopMenuBuilder;
+import gg.lode.bookshelfapi.api.util.MiniMessageHelper;
+import gg.lode.bookshelfapi.api.util.VariableContext;
+import net.infumia.titleupdater.TitleUpdater;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryCloseEvent;
@@ -81,6 +84,14 @@ public abstract class Menu implements InventoryHolder {
     public void rebuild() {
         this.inventory.clear();
         this.init();
+    }
+
+    public void setTitle(String str) {
+        setTitle(str, new VariableContext());
+    }
+
+    public void setTitle(String str, VariableContext context) {
+        TitleUpdater.update(player, MiniMessageHelper.deserialize(str, context));
     }
 
     public void open() {
