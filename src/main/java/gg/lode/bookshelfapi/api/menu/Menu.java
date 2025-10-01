@@ -1,12 +1,14 @@
 package gg.lode.bookshelfapi.api.menu;
 
 import gg.lode.bookshelfapi.BookshelfAPI;
+import gg.lode.bookshelfapi.api.manager.IMenuManager;
 import gg.lode.bookshelfapi.api.menu.build.MenuBuilder;
 import gg.lode.bookshelfapi.api.menu.build.RowBuilder;
 import gg.lode.bookshelfapi.api.menu.build.TopMenuBuilder;
 import gg.lode.bookshelfapi.api.util.MiniMessageHelper;
 import gg.lode.bookshelfapi.api.util.VariableContext;
 import net.infumia.titleupdater.TitleUpdater;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryCloseEvent;
@@ -20,7 +22,7 @@ public abstract class Menu implements InventoryHolder {
     protected Inventory inventory;
     private TopMenuBuilder topMenuBuilder;
     private MenuBuilder bottomMenuBuilder;
-
+    protected Component title;
     protected final Player player;
 
     public Menu(Player player) {
@@ -34,11 +36,13 @@ public abstract class Menu implements InventoryHolder {
         if (this.inventory == null)
             this.inventory = Bukkit.createInventory(null, rows * 9, this.topMenuBuilder.getTitle());
 
+        this.title = this.topMenuBuilder.getTitle();
+
         // Top Contents
         if (topMenuBuilder.getRowBuilders().length > 6)
             throw new IllegalArgumentException("Invalid top rows created! Size must be from 1-6");
 
-        RowBuilder @NotNull[] rowBuilders = topMenuBuilder.getRowBuilders();
+        RowBuilder @NotNull [] rowBuilders = topMenuBuilder.getRowBuilders();
         for (int y = 0; y < rowBuilders.length; y++) {
             @Nullable RowBuilder rowBuilder = rowBuilders[y];
             if (rowBuilder == null) continue;
@@ -91,17 +95,31 @@ public abstract class Menu implements InventoryHolder {
     }
 
     public void setTitle(String str, VariableContext context) {
-        TitleUpdater.update(player, MiniMessageHelper.deserialize(str, context));
+        this.title = MiniMessageHelper.deserialize(str, context);
+        TitleUpdater.update(player, this.title);
     }
 
     public void open() {
         this.init();
 
+        IMenuManager menuManager = BookshelfAPI.getApi().getMenuManager();
+//        final Menu activeMenu = menuManager.getActiveMenu(player);
+
         topMenuBuilder.getOpenActions().forEach(Runnable::run);
-        BookshelfAPI.getApi().getMenuManager().register(player.getUniqueId(), this);
+        menuManager.register(player.getUniqueId(), this);
 
         // if open inventory is the current, ignore
         if (player.getOpenInventory().getTopInventory().equals(this.inventory)) return;
+
+//        // If the open inventory is the same size as the intended inventory.
+//        // Then we want to override the inventory and shit, so it's seamless
+//        if (activeMenu != null && activeMenu.inventory.getSize() == this.inventory.getSize()) {
+//            inventory = activeMenu.getInventory();
+//            TitleUpdater.update(player, this.title);
+//            rebuild();
+//            return;
+//        }
+
         player.openInventory(this.inventory);
     }
 

@@ -13,8 +13,8 @@ import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryView;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.UUID;
@@ -36,7 +36,9 @@ public class APIMenuManager implements IMenuManager, Listener {
     @Override
     public void register(UUID uniqueId, Menu menu) {
         if (activeMenus.containsKey(uniqueId)) {
-            activeMenus.remove(uniqueId).close();
+            Menu activeMenu = activeMenus.remove(uniqueId);
+            if (activeMenu.getInventory().getSize() != menu.getInventory().getSize())
+                activeMenu.close();
         }
 
         activeMenus.put(uniqueId, menu);
@@ -51,6 +53,18 @@ public class APIMenuManager implements IMenuManager, Listener {
     public void registerAndOpen(UUID uniqueId, Menu menu) {
         this.register(uniqueId, menu);
         menu.open();
+    }
+
+    @Nullable
+    @Override
+    public Menu getActiveMenu(Player player) {
+        return getActiveMenu(player.getUniqueId());
+    }
+
+    @Override
+    @Nullable
+    public Menu getActiveMenu(UUID uniqueId) {
+        return activeMenus.get(uniqueId);
     }
 
     @EventHandler
