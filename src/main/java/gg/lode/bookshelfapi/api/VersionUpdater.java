@@ -34,7 +34,7 @@ public class VersionUpdater implements Listener {
         if (this.latestVersion != null) {
             if (isNewerVersion(this.latestVersion, currentVersion)) {
                 plugin.getLogger().severe("=================================");
-                plugin.getLogger().severe(String.format("A newer version of %s is available for download in Modrinth!", name));
+                plugin.getLogger().severe(String.format("A newer version of %s is available for download at Lodestone!", name));
                 plugin.getLogger().severe(String.format("Newest Version: %s | Current Version: %s", this.latestVersion, currentVersion));
                 plugin.getLogger().severe(String.format("%s/version/%s", this.baseUrl, this.latestVersion));
                 plugin.getLogger().severe("=================================");
@@ -52,7 +52,7 @@ public class VersionUpdater implements Listener {
                         player.sendMessage(Component.empty());
                         player.sendMessage(MiniMessage.miniMessage().deserialize(String.format("  A newer version of <yellow>%s <reset>is available for download.", name)));
                         player.sendMessage(MiniMessage.miniMessage().deserialize(String.format("  Newest Version: <green>%s <reset>| <reset>Current Version: <yellow>%s", latestVersion, currentVersion)));
-                        player.sendMessage(MiniMessage.miniMessage().deserialize(String.format("  <white>Update %s at <hover:show_text:'<green>Update %s at Modrinth!'><click:open_url:%s/version/%s><underlined><green>Modrinth!", name, name, baseUrl, latestVersion)));
+                        player.sendMessage(MiniMessage.miniMessage().deserialize(String.format("  <white>Update %s at <hover:show_text:'<green>Update %s at Lodestone!'><click:open_url:%s/version/%s><underlined><green>Modrinth!", name, name, baseUrl, latestVersion)));
                         player.sendMessage(Component.empty());
                     }
                 }
@@ -81,13 +81,13 @@ public class VersionUpdater implements Listener {
                 return ((JSONObject) jsonArray.get(0)).getString("version_number");
             } else {
                 plugin.getLogger().severe("=================================");
-                plugin.getLogger().severe(String.format("Failed to retrieve latest version of %s from Modrinth!", name));
+                plugin.getLogger().severe(String.format("Failed to retrieve latest version of %s from Lodestone!", name));
                 plugin.getLogger().severe("\"version_number\" is missing or status didn't return OK");
                 plugin.getLogger().severe("=================================");
             }
         } catch (Exception e) {
             plugin.getLogger().severe("=================================");
-            plugin.getLogger().severe(String.format("Failed to retrieve latest version of %s from Modrinth!", name));
+            plugin.getLogger().severe(String.format("Failed to retrieve latest version of %s from Lodestone!", name));
             e.printStackTrace();
             plugin.getLogger().severe("=================================");
         }
