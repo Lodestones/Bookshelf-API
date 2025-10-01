@@ -95,9 +95,7 @@ public class ItemBuilder {
             this.potionData = potionMeta.getBasePotionData();
             this.potionColor = potionMeta.getColor();
             // copy custom potion effects
-            for (PotionEffect eff : potionMeta.getCustomEffects()) {
-                this.potionEffects.add(eff);
-            }
+            this.potionEffects.addAll(potionMeta.getCustomEffects());
         }
         if (itemMeta1 instanceof LeatherArmorMeta leatherArmorMeta) {
             this.leatherColor = String.format("#%02x%02x%02x", leatherArmorMeta.getColor().getRed(), leatherArmorMeta.getColor().getGreen(), leatherArmorMeta.getColor().getBlue());
@@ -130,6 +128,61 @@ public class ItemBuilder {
         return new ItemBuilder(itemStack);
     }
 
+    public ItemBuilder set(ItemStack itemStack) {
+        this.material = itemStack.getType();
+        this.itemStack = itemStack;
+        this.skullPlayer = null;
+        this.base64Skull = null;
+        this.amount = itemStack.getAmount();
+        ItemMeta meta = itemStack.getItemMeta();
+        assert meta != null;
+        if (meta.lore() != null)
+            this.lore = meta.lore();
+        this.modelData = meta.hasCustomModelData() ? meta.getCustomModelData() : 0;
+        this.title = meta.displayName();
+        this.isUnbreakable = meta.isUnbreakable();
+        this.flags = meta.getItemFlags().toArray(ItemFlag[]::new);
+        // 1.21.4+ reflective state
+        this.itemModelKey = PaperCapabilities.getItemModelIfSupported(meta);
+        this.maxStackSize = PaperCapabilities.getMaxStackSizeIfSupported(meta);
+        this.hideTooltip = PaperCapabilities.getHideTooltipIfSupported(meta);
+        this.glintOverride = PaperCapabilities.getEnchantmentGlintOverrideIfSupported(meta);
+        this.tooltipStyle = PaperCapabilities.getTooltipStyleIfSupported(meta);
+        this.glider = PaperCapabilities.getGliderIfSupported(meta);
+        this.rarity = PaperCapabilities.getRarityIfSupported(meta);
+        ItemMeta itemMeta1 = itemStack.getItemMeta();
+        if (itemMeta1 instanceof PotionMeta potionMeta) {
+            this.potionData = potionMeta.getBasePotionData();
+            this.potionColor = potionMeta.getColor();
+            // copy custom potion effects
+            this.potionEffects.addAll(potionMeta.getCustomEffects());
+        }
+        if (itemMeta1 instanceof LeatherArmorMeta leatherArmorMeta) {
+            this.leatherColor = String.format("#%02x%02x%02x", leatherArmorMeta.getColor().getRed(), leatherArmorMeta.getColor().getGreen(), leatherArmorMeta.getColor().getBlue());
+        }
+        itemMeta1 = itemStack.getItemMeta();
+        if (itemMeta1 instanceof SkullMeta skullMeta) {
+            this.skullPlayer = skullMeta.getOwningPlayer();
+        }
+        // copy enchantments
+        if (!meta.getEnchants().isEmpty()) {
+            this.enchantments.putAll(meta.getEnchants());
+        }
+        if (meta instanceof EnchantmentStorageMeta storageMeta && !storageMeta.getStoredEnchants().isEmpty()) {
+            this.bookEnchantments.putAll(storageMeta.getStoredEnchants());
+        }
+        // copy trim
+        if (meta instanceof ArmorMeta armorMeta && armorMeta.hasTrim()) {
+            ArmorTrim trim = armorMeta.getTrim();
+            if (trim != null) {
+                this.trimMaterial = trim.getMaterial();
+                this.trimPattern = trim.getPattern();
+            }
+        }
+
+        return this;
+    }
+
     // Attribute-based methods removed for modern versions
 
     public String leatherColor() {
@@ -141,8 +194,9 @@ public class ItemBuilder {
         return this;
     }
 
-    public void addOnBuildConsumer(Consumer<ItemStack> consumer) {
+    public ItemBuilder addOnBuildConsumer(Consumer<ItemStack> consumer) {
         this.onBuildConsumers.add(consumer);
+        return this;
     }
 
     public List<Consumer<ItemStack>> buildConsumers() {
@@ -210,6 +264,11 @@ public class ItemBuilder {
 
     public ItemBuilder itemModel(NamespacedKey modelKey) {
         this.itemModelKey = modelKey;
+        return this;
+    }
+
+    public ItemBuilder itemModel(String namespace, String value) {
+        this.itemModelKey = new NamespacedKey(namespace, value);
         return this;
     }
 
