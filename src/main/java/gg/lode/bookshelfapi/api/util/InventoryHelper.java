@@ -1,5 +1,6 @@
 package gg.lode.bookshelfapi.api.util;
 
+import org.bukkit.Bukkit;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.io.BukkitObjectInputStream;
@@ -47,6 +48,30 @@ public class InventoryHelper {
                 e.printStackTrace();
             }
         }
+    }
+
+    public static byte[] deserialize(byte @Nullable [] serializedInventory) {
+        if (serializedInventory != null) {
+            Inventory inventory = Bukkit.createInventory(null, 54);
+            try {
+                ByteArrayInputStream inputStream = new ByteArrayInputStream(serializedInventory);
+                BukkitObjectInputStream dataInput = new BukkitObjectInputStream(inputStream);
+
+                int size = dataInput.readInt();
+
+                for (int i = 0; i < size; i++) {
+                    ItemStack item = (ItemStack) dataInput.readObject();
+                    inventory.setItem(i, item);
+                }
+
+                dataInput.close();
+                return serialize(inventory.getContents());
+            } catch (IOException | ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return new byte[]{};
     }
 
 }
