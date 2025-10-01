@@ -24,45 +24,27 @@ public class MiniMessageHelper {
     private static final MiniMessage MINI_MESSAGE = MiniMessage.miniMessage();
     private static final PlainTextComponentSerializer PLAIN_TEXT_SERIALIZER = PlainTextComponentSerializer.plainText();
 
-    /**
-     * MiniMessage formatting utility, with String.format support built in.
-     * <a href="https://docs.advntr.dev/minimessage/format.html">Read the MiniMessage Docs</a>
-     *
-     * @param str  The {@link String} to deserialize.
-     * @param args The {@link Object} arguments to format the string with.
-     * @return A converted {@link Component}.
-     */
-    public static Component deserialize(String str, Object... args) {
-        return MINI_MESSAGE.deserialize(String.format(str, args));
+    public static Component deserialize(String str, VariableContext context) {
+        return MINI_MESSAGE.deserialize(String.format(context.replace(str)));
     }
 
-    public static Component deserialize(Object str, Object... args) {
-        return MINI_MESSAGE.deserialize(String.format(String.valueOf(str), args));
+    public static Component deserialize(String str) {
+        return MINI_MESSAGE.deserialize(String.format(str));
     }
 
-    /**
-     * MiniMessage formatting utility, but splits any "\n" into a different list.
-     * <a href="https://docs.advntr.dev/minimessage/format.html">Read the MiniMessage Docs</a>
-     *
-     * @param str The {@link String} to deserialize.
-     * @return A converted {@link List} containing {@link Component}s.
-     */
-    public static List<Component> deserializeIntoList(String str) {
+    public static Component deserialize(Object str) {
+        return MINI_MESSAGE.deserialize(String.format(String.valueOf(str)));
+    }
+
+    public static List<Component> deserializeIntoList(String str, VariableContext context) {
         List<Component> components = new ArrayList<>();
         for (String line : str.split("\n"))
-            components.add(deserialize(line));
+            components.add(deserialize(context.replace(line)));
         return components;
     }
 
-    /**
-     * MiniMessage formatting utility, with centering capabilities with String.format support.
-     * <a href="https://docs.advntr.dev/minimessage/format.html">Read the MiniMessage Docs</a>
-     *
-     * @param str The {@link String} to deserialize.
-     * @return A converted {@link List} containing {@link Component}s.
-     */
-    public static List<Component> center(String str, Object... args) {
-        return Wrap.of(String.format(str, args), 50)
+    public static List<Component> center(String str, VariableContext context) {
+        return Wrap.of(String.format(context.replace(str)), 50)
                 .get()
                 .stream()
                 .map(MiniMessageHelper::getCenteredMessage)
@@ -70,12 +52,12 @@ public class MiniMessageHelper {
                 .collect(Collectors.toList());
     }
 
-    public static void centerAndSend(Player player, String str, Object... args) {
-        center(str, args).forEach(player::sendMessage);
+    public static void centerAndSend(Player player, String str, VariableContext context) {
+        center(str, context).forEach(player::sendMessage);
     }
 
-    public static void centerAndBroadcast(String str, Object... args) {
-        center(str, args).forEach(Bukkit::broadcast);
+    public static void centerAndBroadcast(String str, VariableContext context) {
+        center(str, context).forEach(Bukkit::broadcast);
     }
 
     private static String getCenteredMessage(String str) {
@@ -126,7 +108,7 @@ public class MiniMessageHelper {
         return sb + str;
     }
 
-    private static String getComponentContent(Component component) {
+    public static String getComponentContent(Component component) {
         if (component instanceof TextComponent text) {
             return text.content();
         }
@@ -221,32 +203,6 @@ public class MiniMessageHelper {
      */
     private static TextComponent toTextComponent(Component paramComponent) {
         return Component.text().append(paramComponent).build();
-    }
-
-    /**
-     * Generates a spaced text based on pixels.
-     * This value can either be negative or positive.
-     * <p>
-     * Only use this if you have a custom resource pack using <a href="https://github.com/AmberWat/NegativeSpaceFont">NegativeSpaceFont</a>
-     *
-     * @param var1 how far left or right to push the pixel.
-     * @return the generated component.
-     */
-    public static Component space(int var1) {
-        return Component.translatable("space." + Math.min(Math.max(-MAX, var1), MAX)).style(STYLE);
-    }
-
-    /**
-     * Generates a new layer for the text to be on.
-     * This is so some text has a priority layer over another.
-     * WARNING: Mass usage of this can cause FPS lag to the client.
-     * <p>
-     * Only use this if you have a custom resource pack using <a href="https://github.com/AmberWat/NegativeSpaceFont">NegativeSpaceFont</a>
-     *
-     * @return the generated component.
-     */
-    public static Component newLayer() {
-        return Component.translatable("newlayer").style(STYLE);
     }
 
 }
