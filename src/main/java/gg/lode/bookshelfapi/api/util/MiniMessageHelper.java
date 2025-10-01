@@ -25,15 +25,15 @@ public class MiniMessageHelper {
     private static final PlainTextComponentSerializer PLAIN_TEXT_SERIALIZER = PlainTextComponentSerializer.plainText();
 
     public static Component deserialize(String str, VariableContext context) {
-        return MINI_MESSAGE.deserialize(String.format(context.replace(str)));
+        return MINI_MESSAGE.deserialize(context.replace(str));
     }
 
     public static Component deserialize(String str) {
-        return MINI_MESSAGE.deserialize(String.format(str));
+        return MINI_MESSAGE.deserialize(str);
     }
 
     public static Component deserialize(Object str) {
-        return MINI_MESSAGE.deserialize(String.format(String.valueOf(str)));
+        return MINI_MESSAGE.deserialize(String.valueOf(str));
     }
 
     public static List<Component> deserializeIntoList(String str, VariableContext context) {
@@ -44,7 +44,7 @@ public class MiniMessageHelper {
     }
 
     public static List<Component> center(String str, VariableContext context) {
-        return Wrap.of(String.format(context.replace(str)), 50)
+        return Wrap.of(context.replace(str), 50)
                 .get()
                 .stream()
                 .map(MiniMessageHelper::getCenteredMessage)
