@@ -18,12 +18,13 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Objects;
 
 /**
- * @author Robsutar
  * A utility class for entity related operations.
  * This class contains methods for giving/dropping items, killing entities gracefully,
  * resetting player defaults, checking if a player is on the ground,
  * teleporting entities, reducing damage by resistance,
  * and forcing damage events.
+ *
+ * @author Robsutar
  */
 @SuppressWarnings("UnstableApiUsage")
 public class EntityHelper {
