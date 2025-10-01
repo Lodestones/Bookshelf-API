@@ -37,8 +37,8 @@ public class APIMenuManager implements IMenuManager, Listener {
     public void register(UUID uniqueId, Menu menu) {
         if (activeMenus.containsKey(uniqueId)) {
             Menu activeMenu = activeMenus.remove(uniqueId);
-            if (activeMenu.getInventory().getSize() != menu.getInventory().getSize())
-                activeMenu.close();
+//            if (activeMenu.getInventory().getSize() != menu.getInventory().getSize())
+//                activeMenu.close();
         }
 
         activeMenus.put(uniqueId, menu);
