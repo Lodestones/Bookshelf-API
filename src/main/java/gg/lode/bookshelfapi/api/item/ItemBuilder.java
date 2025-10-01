@@ -3,16 +3,14 @@ package gg.lode.bookshelfapi.api.item;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import gg.lode.bookshelfapi.api.util.MiniMessageHelper;
+import gg.lode.bookshelfapi.api.util.PaperCapabilities;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.*;
-import org.bukkit.attribute.Attribute;
-import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.*;
@@ -38,11 +36,6 @@ public class ItemBuilder {
     private final ArrayList<PotionEffect> potionEffects = new ArrayList<>();
     private final HashMap<Enchantment, Integer> enchantments = new HashMap<>();
     private final HashMap<Enchantment, Integer> bookEnchantments = new HashMap<>();
-    private final HashMap<EquipmentSlot, Double> attackSpeed = new HashMap<>();
-    private final HashMap<EquipmentSlot, Double> attackDamage = new HashMap<>();
-    private final HashMap<EquipmentSlot, Double> armor = new HashMap<>();
-    private final HashMap<EquipmentSlot, Double> armorToughness = new HashMap<>();
-    private final HashMap<EquipmentSlot, Double> knockbackResistance = new HashMap<>();
     private ItemStack itemStack = null;
     private Material material = null;
     private int amount = 1;
@@ -58,6 +51,13 @@ public class ItemBuilder {
     private TrimPattern trimPattern = null;
     private TrimMaterial trimMaterial = null;
     private List<Component> lore;
+    private NamespacedKey itemModelKey;
+    private Integer maxStackSize;
+    private Boolean hideTooltip;
+    private Boolean glintOverride;
+    private NamespacedKey tooltipStyle;
+    private Boolean glider;
+    private Object rarity;
 
 
     public ItemBuilder(Material material) {
@@ -99,20 +99,7 @@ public class ItemBuilder {
     public ItemBuilder() {
     }
 
-    public ItemBuilder knockbackResistance(EquipmentSlot slot, double knockbackResistance) {
-        this.knockbackResistance.put(slot, knockbackResistance);
-        return this;
-    }
-
-    public ItemBuilder armorToughness(EquipmentSlot slot, double armorToughness) {
-        this.armorToughness.put(slot, armorToughness);
-        return this;
-    }
-
-    public ItemBuilder armor(EquipmentSlot slot, double armor) {
-        this.armor.put(slot, armor);
-        return this;
-    }
+    // Attribute-based methods removed for modern versions
 
     public String leatherColor() {
         return this.leatherColor;
@@ -139,15 +126,7 @@ public class ItemBuilder {
         return this.title;
     }
 
-    public ItemBuilder attackSpeed(EquipmentSlot slot, double attackSpeed) {
-        this.attackSpeed.put(slot, attackSpeed);
-        return this;
-    }
-
-    public ItemBuilder attackDamage(EquipmentSlot slot, double attackDamage) {
-        this.attackDamage.put(slot, attackDamage);
-        return this;
-    }
+    // Attribute-based methods removed for modern versions
 
     public ItemBuilder potionColor(Color potionColor) {
         this.potionColor = potionColor;
@@ -195,6 +174,41 @@ public class ItemBuilder {
 
     public ItemBuilder modelData(int modelData) {
         this.modelData = modelData;
+        return this;
+    }
+
+    public ItemBuilder itemModel(NamespacedKey modelKey) {
+        this.itemModelKey = modelKey;
+        return this;
+    }
+
+    public ItemBuilder maxStackSize(int size) {
+        this.maxStackSize = size;
+        return this;
+    }
+
+    public ItemBuilder hideTooltip(boolean hide) {
+        this.hideTooltip = hide;
+        return this;
+    }
+
+    public ItemBuilder enchantmentGlintOverride(boolean override) {
+        this.glintOverride = override;
+        return this;
+    }
+
+    public ItemBuilder tooltipStyle(NamespacedKey styleKey) {
+        this.tooltipStyle = styleKey;
+        return this;
+    }
+
+    public ItemBuilder glider(boolean glider) {
+        this.glider = glider;
+        return this;
+    }
+
+    public ItemBuilder rarity(Object itemRarityOrName) {
+        this.rarity = itemRarityOrName;
         return this;
     }
 
@@ -311,6 +325,27 @@ public class ItemBuilder {
         meta.displayName((this.title != null) ? this.title : null);
         meta.setUnbreakable(this.isUnbreakable);
         meta.addItemFlags(this.flags);
+        if (this.itemModelKey != null) {
+            PaperCapabilities.setItemModelIfSupported(meta, this.itemModelKey);
+        }
+        if (this.maxStackSize != null) {
+            PaperCapabilities.setMaxStackSizeIfSupported(meta, this.maxStackSize);
+        }
+        if (this.hideTooltip != null) {
+            PaperCapabilities.setHideTooltipIfSupported(meta, this.hideTooltip);
+        }
+        if (this.glintOverride != null) {
+            PaperCapabilities.setEnchantmentGlintOverrideIfSupported(meta, this.glintOverride);
+        }
+        if (this.tooltipStyle != null) {
+            PaperCapabilities.setTooltipStyleIfSupported(meta, this.tooltipStyle);
+        }
+        if (this.glider != null) {
+            PaperCapabilities.setGliderIfSupported(meta, this.glider);
+        }
+        if (this.rarity != null) {
+            PaperCapabilities.setRarityIfSupported(meta, this.rarity);
+        }
         if (meta instanceof PotionMeta potionMeta) {
             if (this.potionData != null)
                 potionMeta.setBasePotionData(this.potionData);
@@ -349,32 +384,7 @@ public class ItemBuilder {
 
         stringTags.forEach((key, value) -> meta.getPersistentDataContainer().set(key, PersistentDataType.STRING, value));
         tags.forEach(key -> meta.getPersistentDataContainer().set(key, PersistentDataType.BOOLEAN, true));
-        if (this.attackSpeed.size() > 0) {
-            for (Map.Entry<EquipmentSlot, Double> entry : attackSpeed.entrySet()) {
-                meta.removeAttributeModifier(entry.getKey());
-                meta.addAttributeModifier(Attribute.GENERIC_ATTACK_SPEED, new AttributeModifier(UUID.randomUUID(), "generic.attack_speed", entry.getValue(), AttributeModifier.Operation.ADD_NUMBER, entry.getKey()));
-            }
-        }
-        if (this.armor.size() > 0) {
-            for (Map.Entry<EquipmentSlot, Double> entry : armor.entrySet()) {
-                meta.addAttributeModifier(Attribute.GENERIC_ARMOR, new AttributeModifier(UUID.randomUUID(), "generic.armor", entry.getValue(), AttributeModifier.Operation.ADD_NUMBER, entry.getKey()));
-            }
-        }
-        if (this.armorToughness.size() > 0) {
-            for (Map.Entry<EquipmentSlot, Double> entry : armorToughness.entrySet()) {
-                meta.addAttributeModifier(Attribute.GENERIC_ARMOR_TOUGHNESS, new AttributeModifier(UUID.randomUUID(), "generic.armor_toughness", entry.getValue(), AttributeModifier.Operation.ADD_NUMBER, entry.getKey()));
-            }
-        }
-        if (this.knockbackResistance.size() > 0) {
-            for (Map.Entry<EquipmentSlot, Double> entry : knockbackResistance.entrySet()) {
-                meta.addAttributeModifier(Attribute.GENERIC_KNOCKBACK_RESISTANCE, new AttributeModifier(UUID.randomUUID(), "generic.knockback_resistance", entry.getValue(), AttributeModifier.Operation.ADD_NUMBER, entry.getKey()));
-            }
-        }
-        if (this.attackDamage.size() > 0) {
-            for (Map.Entry<EquipmentSlot, Double> entry : attackDamage.entrySet()) {
-                meta.addAttributeModifier(Attribute.GENERIC_ATTACK_DAMAGE, new AttributeModifier(UUID.randomUUID(), "generic.attack_damage", entry.getValue(), AttributeModifier.Operation.ADD_NUMBER, entry.getKey()));
-            }
-        }
+        // Attribute modifiers removed for modern versions
         meta.lore(this.lore);
         this.itemStack.setItemMeta(meta);
         this.itemStack.addUnsafeEnchantments(this.enchantments);
