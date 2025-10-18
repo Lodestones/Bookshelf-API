@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
 public class VariableContext {
 
     private static final Pattern PLACEHOLDER_PATTERN = Pattern.compile("<<([a-zA-Z0-9_]+?)(?::([a-zA-Z]))?>>|<([a-zA-Z0-9_]+?)(?::([a-zA-Z]))?>");
-    private final Map<String, String> variables = new HashMap<>();
+    private final Map<String, String> variables;
 
     // Define or update a variable
     public void set(String key, Object value) {
@@ -22,10 +22,41 @@ public class VariableContext {
         return variables.get(key);
     }
 
+    public VariableContext() {
+        this.variables = new HashMap<>();
+    }
+
+    public VariableContext(Map<String, String> variables) {
+        this.variables = variables;
+    }
+
     public static void main(String[] args) {
-        VariableContext context = new VariableContext();
+        VariableContext context = VariableContext.of();
         context.set("test", "Hello, World!");
         System.out.println(context.replace("<<test>>"));
+    }
+
+    public static VariableContext of() {
+        return new VariableContext();
+    }
+
+    public static VariableContext of(String key, String value) {
+        VariableContext ctx = new VariableContext();
+        ctx.set(key, value);
+        return ctx;
+    }
+
+    public VariableContext fromVariables(Map<String, String> values) {
+        return new VariableContext(values);
+    }
+
+    public Map<String, String> getVariables() {
+        return this.variables;
+    }
+
+    public VariableContext with(String key, String value) {
+        set(key, value);
+        return this;
     }
 
     private String applyFormatter(String value, String format) {
@@ -56,7 +87,7 @@ public class VariableContext {
         do {
             replaced = false;
             Matcher matcher = PLACEHOLDER_PATTERN.matcher(result);
-            StringBuffer buffer = new StringBuffer();
+            StringBuilder buffer = new StringBuilder();
 
             while (matcher.find()) {
                 String key;
