@@ -43,6 +43,83 @@ public class MiniMessageHelper {
         return components;
     }
 
+    /**
+     * Removes all ampersands from a given string.
+     * <p>
+     * Example: "&cHello &bWorld!" -> "cHello bWorld!"
+     */
+    public static String removeAmpersands(String input) {
+        if (input == null) return null;
+        return input.replace("&", "");
+    }
+
+    /**
+     * Converts legacy '&' formatting to Kyori Adventure MiniMessage tags.
+     * <p>
+     * Supports: Colors + Bold, Italic, Underline, Strikethrough, Obfuscated + Reset
+     * <p>
+     * Example:
+     * "&cHello &lWorld" -> "<red>Hello <bold>World"
+     */
+    public static String convertAmpersandToMiniMessage(String input) {
+        if (input == null) return null;
+
+        String output = input;
+
+        // Colors
+        output = output
+                .replace("&0", "<black>")
+                .replace("&1", "<dark_blue>")
+                .replace("&2", "<dark_green>")
+                .replace("&3", "<dark_aqua>")
+                .replace("&4", "<dark_red>")
+                .replace("&5", "<dark_purple>")
+                .replace("&6", "<gold>")
+                .replace("&7", "<gray>")
+                .replace("&8", "<dark_gray>")
+                .replace("&9", "<blue>")
+                .replace("&a", "<green>")
+                .replace("&b", "<aqua>")
+                .replace("&c", "<red>")
+                .replace("&d", "<light_purple>")
+                .replace("&e", "<yellow>")
+                .replace("&f", "<white>")
+                .replace("§0", "<black>")
+                .replace("§1", "<dark_blue>")
+                .replace("§2", "<dark_green>")
+                .replace("§3", "<dark_aqua>")
+                .replace("§4", "<dark_red>")
+                .replace("§5", "<dark_purple>")
+                .replace("§6", "<gold>")
+                .replace("§7", "<gray>")
+                .replace("§8", "<dark_gray>")
+                .replace("§9", "<blue>")
+                .replace("§a", "<green>")
+                .replace("§b", "<aqua>")
+                .replace("§c", "<red>")
+                .replace("§d", "<light_purple>")
+                .replace("§e", "<yellow>")
+                .replace("§f", "<white>");
+
+        // Styles
+        output = output
+                .replace("&l", "<bold>")
+                .replace("&o", "<italic>")
+                .replace("&n", "<underlined>")
+                .replace("&m", "<strikethrough>")
+                .replace("&k", "<obfuscated>")
+                .replace("§l", "<bold>")
+                .replace("§o", "<italic>")
+                .replace("§n", "<underlined>")
+                .replace("§m", "<strikethrough>")
+                .replace("§k", "<obfuscated>");
+
+        // Reset
+        output = output.replace("&r", "<reset>");
+
+        return output;
+    }
+
     public static List<Component> center(String str, VariableContext context) {
         return Wrap.of(context.replace(str), 50)
                 .get()
