@@ -6,13 +6,13 @@
 
     <groupId>gg.lode</groupId>
     <artifactId>Bookshelf-API</artifactId>
-    <version>1.1.7</version>
+    <version>1.1.71</version>
     <packaging>jar</packaging>
 
     <name>Bookshelf-API</name>
 
     <properties>
-        <java.version>22</java.version>
+        <java.version>17</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
