@@ -107,7 +107,7 @@ public final class PaperCapabilities {
     }
 
     public static void setItemModelIfSupported(ItemMeta meta, NamespacedKey key) {
-        if (SET_ITEM_MODEL == null || meta == null || key == null) return;
+        if (SET_ITEM_MODEL == null || meta == null) return;
         try {
             SET_ITEM_MODEL.invoke(meta, key);
         } catch (Throwable ignored) {
