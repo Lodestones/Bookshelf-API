@@ -4,6 +4,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
 import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.damage.DamageSource;
 import org.bukkit.damage.DamageType;
 import org.bukkit.entity.*;
@@ -48,15 +49,23 @@ public class EntityHelper {
         }
     }
 
-    public static void resetDefaults(Player p) {
-        p.getInventory().clear();
-        p.setExperienceLevelAndProgress(0);
+    public static void resetDefaults(Player player) {
+        player.getInventory().clear();
+        player.setExperienceLevelAndProgress(0);
 
-        p.clearActivePotionEffects();
-        p.setHealth(
-                Objects.requireNonNull(p.getAttribute(Attribute.GENERIC_MAX_HEALTH)).getValue()
-        );
-        p.setFoodLevel(20);
+        player.clearActivePotionEffects();
+        player.setHealth(Objects.requireNonNull(player.getAttribute(Attribute.GENERIC_MAX_HEALTH)).getValue());
+        player.setFoodLevel(20);
+
+        for (Attribute attribute : Attribute.values()) {
+            AttributeInstance att = player.getAttribute(attribute);
+            if (att != null) {
+                att.setBaseValue(Objects.requireNonNull(player.getAttribute(attribute)).getDefaultValue());
+            }
+        }
+
+        Objects.requireNonNull(player.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE)).setBaseValue(1);
+        Objects.requireNonNull(player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED)).setBaseValue(0.1);
     }
 
     @SuppressWarnings("deprecation")
