@@ -52,7 +52,7 @@ public class VersionUpdater implements Listener {
                         player.sendMessage(Component.empty());
                         player.sendMessage(MiniMessage.miniMessage().deserialize(String.format("  A newer version of <yellow>%s <reset>is available for download.", name)));
                         player.sendMessage(MiniMessage.miniMessage().deserialize(String.format("  Newest Version: <green>%s <reset>| <reset>Current Version: <yellow>%s", latestVersion, currentVersion)));
-                        player.sendMessage(MiniMessage.miniMessage().deserialize(String.format("  <white>Update %s at <hover:show_text:'<green>Update %s at Lodestone!'><click:open_url:%s/version/%s><underlined><green>Modrinth!", name, name, baseUrl, latestVersion)));
+                        player.sendMessage(MiniMessage.miniMessage().deserialize(String.format("  <white>Update %s at <hover:show_text:'<green>Update %s at Lodestone!'><click:open_url:%s/version/%s><underlined><gold>Lodestone!", name, name, baseUrl, latestVersion)));
                         player.sendMessage(Component.empty());
                     }
                 }

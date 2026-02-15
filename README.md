@@ -22,7 +22,6 @@ The Bookshelf API also provides utility classes that you can use such as:
   - [PlayerChatEvent](https://github.com/Lodestones/Bookshelf/blob/master/src/main/java/to/lodestone/bookshelfapi/api/event/PlayerChatEvent.java)
 - [Creating Custom Config Files](https://github.com/Lodestones/Bookshelf/blob/master/docs/creating_configs.md)
 - [Task Schedulers](https://github.com/Lodestones/Bookshelf/blob/master/src/main/java/to/lodestone/bookshelfapi/api/Task.java)
-- [Modrinth Version Updater](https://github.com/Lodestones/Bookshelf/blob/master/src/main/java/to/lodestone/bookshelfapi/api/VersionUpdater.java)
 - [Fetching Players with Mojang API](https://github.com/Lodestones/Bookshelf/blob/master/src/main/java/to/lodestone/bookshelfapi/api/mojang/MojangProfile.java)
 
 ## Table of Contents
