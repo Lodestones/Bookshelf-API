@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * A utility class that can retrieve a {@link YamlConfiguration} file.
@@ -24,8 +25,8 @@ import java.util.UUID;
 public class Configuration {
     protected final JavaPlugin plugin;
     protected YamlConfiguration config;
-
     protected final String filePath;
+    private final AtomicBoolean dirty = new AtomicBoolean(false);
 
     public Configuration(JavaPlugin plugin, String filePath) {
         this.plugin = plugin;
@@ -68,11 +69,38 @@ public class Configuration {
 
     public void save() {
         try {
+            dirty.set(false);
             File configFile = new File(plugin.getDataFolder() + File.separator + filePath);
             this.config.save(configFile);
         } catch (Exception err) {
             err.printStackTrace();
         }
+    }
+
+    /**
+     * Marks this configuration as dirty so it will be saved on the next periodic flush.
+     * Use this instead of {@link #save()} in event handlers to avoid synchronous disk I/O on the main thread.
+     */
+    public void markDirty() {
+        dirty.set(true);
+    }
+
+    /**
+     * Saves the configuration to disk only if it has been marked dirty.
+     *
+     * @return true if a save was performed, false if the configuration was clean.
+     */
+    public boolean saveIfDirty() {
+        if (dirty.compareAndSet(true, false)) {
+            try {
+                File configFile = new File(plugin.getDataFolder() + File.separator + filePath);
+                this.config.save(configFile);
+            } catch (Exception err) {
+                err.printStackTrace();
+            }
+            return true;
+        }
+        return false;
     }
 
     public @NotNull Set<String> getKeys(boolean deep) {

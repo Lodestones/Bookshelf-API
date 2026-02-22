@@ -2,9 +2,12 @@ package gg.lode.bookshelfapi.api.util;
 
 import org.bukkit.attribute.Attribute;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
 
+import javax.annotation.Nullable;
 import java.util.Objects;
 
 /**
@@ -44,6 +47,10 @@ public final class TrueDamageHelper {
         BASELINE_PROTECTION_LEVEL = baselineProtectionLevel;
     }
 
+    public static void applyScaledTrueDamage(LivingEntity target, double targetHearts) {
+        applyScaledTrueDamage(target, null, targetHearts);
+    }
+
     /**
      * Applies scaled true damage directly via setHealth.
      * <p>
@@ -51,20 +58,28 @@ public final class TrueDamageHelper {
      * diamond armor loses exactly that many hearts. Players with less armor/enchantments
      * take proportionally more damage; players with more take less.
      *
-     * @param player The player to damage
+     * @param target The player to damage
+     * @param damager The damager
      * @param targetHearts Hearts to lose on a full Protection III diamond player
      */
-    public static void applyScaledTrueDamage(Player player, double targetHearts) {
+    public static void applyScaledTrueDamage(LivingEntity target, @Nullable LivingEntity damager, double targetHearts) {
+        applyScaledTrueDamage(target, damager, targetHearts, 0);
+    }
+
+    public static void applyScaledTrueDamage(LivingEntity target, @Nullable LivingEntity damager, double targetHearts, int noDamageTicks) {
+        if (target.getNoDamageTicks() > 0) return;
+
         double baselineReduction = calculateTotalReduction(BASELINE_ARMOR, BASELINE_TOUGHNESS, BASELINE_PROTECTION_LEVEL, targetHearts);
 
-        double armor = Objects.requireNonNull(player.getAttribute(Attribute.GENERIC_ARMOR)).getValue();
-        double toughness = Objects.requireNonNull(player.getAttribute(Attribute.GENERIC_ARMOR_TOUGHNESS)).getValue();
-        int protectionLevel = getTotalProtectionLevel(player);
+        double armor = Objects.requireNonNull(target.getAttribute(Attribute.GENERIC_ARMOR)).getValue();
+        double toughness = Objects.requireNonNull(target.getAttribute(Attribute.GENERIC_ARMOR_TOUGHNESS)).getValue();
+        int protectionLevel = getTotalProtectionLevel(target);
         double actualReduction = calculateTotalReduction(armor, toughness, protectionLevel, targetHearts);
 
         double damage = targetHearts * (1.0 - actualReduction) / (1.0 - baselineReduction);
-
-        player.setHealth(Math.max(0.0, player.getHealth() - damage));
+        if (damager != null) target.damage(0.01, damager);
+        target.setNoDamageTicks(noDamageTicks);
+        target.setHealth(Math.max(0.0, target.getHealth() - damage));
     }
 
     private static double calculateTotalReduction(double armor, double toughness, int protectionLevel, double referenceDamage) {
@@ -88,9 +103,11 @@ public final class TrueDamageHelper {
         return effectiveArmor / 25.0;
     }
 
-    private static int getTotalProtectionLevel(Player player) {
+    private static int getTotalProtectionLevel(LivingEntity target) {
         int total = 0;
-        for (ItemStack item : player.getInventory().getArmorContents()) {
+        EntityEquipment equipment = target.getEquipment();
+        if (equipment == null) return 0;
+        for (ItemStack item : equipment.getArmorContents()) {
             if (item != null) {
                 total += item.getEnchantmentLevel(Enchantment.PROTECTION_ENVIRONMENTAL);
             }

@@ -254,7 +254,7 @@ public class StringHelper {
     }
 
     public static String getTimeString(long milliseconds) {
-        return getTimeString(milliseconds, "Invalid time");
+        return getTimeString(milliseconds, "0");
     }
 
     public static String getTimeString(long milliseconds, String fallback) {
@@ -280,23 +280,23 @@ public class StringHelper {
             sb.append(years).append(" year").append(years > 1 ? "s" : "");
         }
         if (months > 0) {
-            if (sb.length() > 0) sb.append(", ");
+            if (!sb.isEmpty()) sb.append(", ");
             sb.append(months).append(" month").append(months > 1 ? "s" : "");
         }
         if (days > 0) {
-            if (sb.length() > 0) sb.append(", ");
+            if (!sb.isEmpty()) sb.append(", ");
             sb.append(days).append(" day").append(days > 1 ? "s" : "");
         }
         if (hours > 0) {
-            if (sb.length() > 0) sb.append(", ");
+            if (!sb.isEmpty()) sb.append(", ");
             sb.append(hours).append(" hour").append(hours > 1 ? "s" : "");
         }
         if (minutes > 0) {
-            if (sb.length() > 0) sb.append(", ");
+            if (!sb.isEmpty()) sb.append(", ");
             sb.append(minutes).append(" minute").append(minutes > 1 ? "s" : "");
         }
-        if (seconds > 0 || sb.length() == 0) {
-            if (sb.length() > 0) sb.append(", ");
+        if (seconds > 0 || sb.isEmpty()) {
+            if (!sb.isEmpty()) sb.append(", ");
             sb.append(seconds).append(" second").append(seconds != 1 ? "s" : "");
         }
 
