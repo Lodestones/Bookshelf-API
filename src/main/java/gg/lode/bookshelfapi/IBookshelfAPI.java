@@ -44,4 +44,10 @@ public interface IBookshelfAPI {
     ICustomItemManager getItemManager();
 
     IVanishManager getVanishManager();
+
+    /**
+     * Fetches the Moderation Manager.
+     * @return The {@link IModerationManager} instance.
+     */
+    IModerationManager getModerationManager();
 }
