@@ -254,7 +254,7 @@ public class StringHelper {
     }
 
     public static String getTimeString(long milliseconds) {
-        return getTimeString(milliseconds, "0");
+        return getTimeString(milliseconds, "0 seconds");
     }
 
     public static String getTimeString(long milliseconds, String fallback) {
