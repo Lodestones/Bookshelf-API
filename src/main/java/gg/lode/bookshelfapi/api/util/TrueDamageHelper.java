@@ -69,6 +69,47 @@ public final class TrueDamageHelper {
     public static void applyScaledTrueDamage(LivingEntity target, @Nullable LivingEntity damager, double targetHearts, int noDamageTicks) {
         if (target.getNoDamageTicks() > 0) return;
 
+        double damage = calculateScaledDamage(target, targetHearts);
+        if (damager != null) target.damage(0.01, damager);
+        target.setNoDamageTicks(noDamageTicks);
+        target.setHealth(Math.max(0.0, target.getHealth() - damage));
+    }
+
+    /**
+     * Applies scaled true damage, consuming absorption hearts first before reducing health.
+     * Behaves identically to {@link #applyScaledTrueDamage} but any absorption the target
+     * has will absorb damage before it reaches their actual health pool.
+     *
+     * @param target       The entity to damage
+     * @param damager      The damager (nullable)
+     * @param targetHearts Hearts to lose on a baseline-geared player
+     */
+    public static void applyScaledTrueDamageWithAbsorption(LivingEntity target, @Nullable LivingEntity damager, double targetHearts) {
+        applyScaledTrueDamageWithAbsorption(target, damager, targetHearts, 0);
+    }
+
+    public static void applyScaledTrueDamageWithAbsorption(LivingEntity target, @Nullable LivingEntity damager, double targetHearts, int noDamageTicks) {
+        if (target.getNoDamageTicks() > 0) return;
+
+        double damage = calculateScaledDamage(target, targetHearts);
+        if (damager != null) target.damage(0.01, damager);
+        target.setNoDamageTicks(noDamageTicks);
+
+        double absorption = target.getAbsorptionAmount();
+        if (absorption > 0) {
+            double remaining = damage - absorption;
+            if (remaining <= 0) {
+                target.setAbsorptionAmount(absorption - damage);
+                return;
+            }
+            target.setAbsorptionAmount(0);
+            damage = remaining;
+        }
+
+        target.setHealth(Math.max(0.0, target.getHealth() - damage));
+    }
+
+    private static double calculateScaledDamage(LivingEntity target, double targetHearts) {
         double baselineReduction = calculateTotalReduction(BASELINE_ARMOR, BASELINE_TOUGHNESS, BASELINE_PROTECTION_LEVEL, targetHearts);
 
         double armor = Objects.requireNonNull(target.getAttribute(Attribute.GENERIC_ARMOR)).getValue();
@@ -76,10 +117,7 @@ public final class TrueDamageHelper {
         int protectionLevel = getTotalProtectionLevel(target);
         double actualReduction = calculateTotalReduction(armor, toughness, protectionLevel, targetHearts);
 
-        double damage = targetHearts * (1.0 - actualReduction) / (1.0 - baselineReduction);
-        if (damager != null) target.damage(0.01, damager);
-        target.setNoDamageTicks(noDamageTicks);
-        target.setHealth(Math.max(0.0, target.getHealth() - damage));
+        return targetHearts * (1.0 - actualReduction) / (1.0 - baselineReduction);
     }
 
     private static double calculateTotalReduction(double armor, double toughness, int protectionLevel, double referenceDamage) {
