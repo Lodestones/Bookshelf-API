@@ -50,4 +50,10 @@ public interface IBookshelfAPI {
      * @return The {@link IModerationManager} instance.
      */
     IModerationManager getModerationManager();
+
+    /**
+     * Fetches the Kit Manager.
+     * @return The {@link IKitManager} instance.
+     */
+    IKitManager getKitManager();
 }

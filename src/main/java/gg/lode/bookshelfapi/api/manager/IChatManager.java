@@ -1,5 +1,6 @@
 package gg.lode.bookshelfapi.api.manager;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface IChatManager {
@@ -8,5 +9,7 @@ public interface IChatManager {
     boolean isChatMuted();
 
     boolean canPlayerBypassChat(UUID uniqueId);
+
+    List<String> getChannels();
 
 }

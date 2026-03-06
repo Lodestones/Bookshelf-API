@@ -53,6 +53,12 @@ public interface IModerationManager {
 
     CompletableFuture<List<Infraction>> getActiveInfractions(UUID player);
 
+    // --- Alts ---
+
+    CompletableFuture<List<UUID>> getAlts(UUID player);
+
+    CompletableFuture<String> getLastKnownIP(UUID player);
+
     record Infraction(UUID player, String type, String reason, String issuer,
                       long issuedAt, long expiresAt, boolean active) {
     }

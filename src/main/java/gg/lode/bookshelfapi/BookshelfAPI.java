@@ -94,6 +94,11 @@ public class BookshelfAPI {
             public IModerationManager getModerationManager() {
                 throw new UnsupportedOperationException("ModerationManager is only available with the Bookshelf plugin! Please install Bookshelf to use this feature.");
             }
+
+            @Override
+            public IKitManager getKitManager() {
+                throw new UnsupportedOperationException("KitManager is only available with the Bookshelf plugin! Please install Bookshelf to use this feature.");
+            }
         };
     }
 
