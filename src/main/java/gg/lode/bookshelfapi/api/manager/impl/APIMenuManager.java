@@ -81,8 +81,10 @@ public class APIMenuManager implements IMenuManager, Listener {
         if (activeMenus.containsKey(player.getUniqueId())) {
             int slot = event.getSlot();
             Menu menu = activeMenus.get(player.getUniqueId());
+            // Fire top menu click actions for all clicks (top and bottom inventory)
+            menu.getTopMenuBuilder().getClickActions().forEach(c -> c.accept(event));
+
             if (view.getTopInventory().equals(clickedInventory)) {
-                menu.getTopMenuBuilder().getClickActions().forEach(c -> c.accept(event));
                 menu.getTopMenuBuilder().process(slot, event);
             } else if (view.getBottomInventory().equals(clickedInventory)) {
                 MenuBuilder bottomMenuBuilder = menu.getBottomMenuBuilder();
