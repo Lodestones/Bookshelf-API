@@ -1,11 +1,19 @@
 package gg.lode.bookshelfapi.api.util;
 
+import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
+import org.bukkit.GameRule;
+import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.event.entity.EntityResurrectEvent;
 import org.bukkit.inventory.EntityEquipment;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 
 import javax.annotation.Nullable;
 import java.util.Objects;
@@ -89,7 +97,7 @@ public final class TrueDamageHelper {
     }
 
     public static void applyScaledTrueDamageWithAbsorption(LivingEntity target, @Nullable LivingEntity damager, double targetHearts, int noDamageTicks) {
-        if (target.getNoDamageTicks() > 0) return;
+        if (target.getNoDamageTicks() > 0 || (target instanceof Player player && (player.getGameMode() == GameMode.CREATIVE || player.getGameMode() == GameMode.SPECTATOR))) return;
 
         double damage = calculateScaledDamage(target, targetHearts);
         if (damager != null) target.damage(0.01, damager);
@@ -107,6 +115,111 @@ public final class TrueDamageHelper {
         }
 
         target.setHealth(Math.max(0.0, target.getHealth() - damage));
+    }
+
+    /**
+     * Applies scaled true damage with totem of undying support.
+     * If the damage would kill the target and they are holding a totem,
+     * the totem is consumed and vanilla resurrection effects are applied.
+     *
+     * @param target       The entity to damage
+     * @param damager      The damager (nullable)
+     * @param targetHearts Hearts to lose on a baseline-geared player
+     */
+    public static void applyScaledTrueDamageWithTotem(LivingEntity target, @Nullable LivingEntity damager, double targetHearts) {
+        applyScaledTrueDamageWithTotem(target, damager, targetHearts, 0);
+    }
+
+    public static void applyScaledTrueDamageWithTotem(LivingEntity target, @Nullable LivingEntity damager, double targetHearts, int noDamageTicks) {
+        if (target.getNoDamageTicks() > 0 || (target instanceof Player player && (player.getGameMode() == GameMode.CREATIVE || player.getGameMode() == GameMode.SPECTATOR))) return;
+
+        double damage = calculateScaledDamage(target, targetHearts);
+        if (damager != null) target.damage(0.01, damager);
+        target.setNoDamageTicks(noDamageTicks);
+
+        double newHealth = target.getHealth() - damage;
+        if (newHealth <= 0 && tryResurrect(target)) return;
+
+        target.setHealth(Math.max(0.0, newHealth));
+    }
+
+    /**
+     * Applies scaled true damage, consuming absorption hearts first and supporting totem of undying.
+     * Combines the behavior of {@link #applyScaledTrueDamageWithAbsorption} and
+     * {@link #applyScaledTrueDamageWithTotem}.
+     *
+     * @param target       The entity to damage
+     * @param damager      The damager (nullable)
+     * @param targetHearts Hearts to lose on a baseline-geared player
+     */
+    public static void applyScaledTrueDamageWithAbsorptionAndTotem(LivingEntity target, @Nullable LivingEntity damager, double targetHearts) {
+        applyScaledTrueDamageWithAbsorptionAndTotem(target, damager, targetHearts, 0);
+    }
+
+    public static void applyScaledTrueDamageWithAbsorptionAndTotem(LivingEntity target, @Nullable LivingEntity damager, double targetHearts, int noDamageTicks) {
+        if (target.getNoDamageTicks() > 0 || (target instanceof Player player && (player.getGameMode() == GameMode.CREATIVE || player.getGameMode() == GameMode.SPECTATOR))) return;
+
+        double damage = calculateScaledDamage(target, targetHearts);
+        if (damager != null) target.damage(0.01, damager);
+        target.setNoDamageTicks(noDamageTicks);
+
+        double absorption = target.getAbsorptionAmount();
+        if (absorption > 0) {
+            double remaining = damage - absorption;
+            if (remaining <= 0) {
+                target.setAbsorptionAmount(absorption - damage);
+                return;
+            }
+            target.setAbsorptionAmount(0);
+            damage = remaining;
+        }
+
+        double newHealth = target.getHealth() - damage;
+        if (newHealth <= 0 && tryResurrect(target)) return;
+
+        target.setHealth(Math.max(0.0, newHealth));
+    }
+
+    /**
+     * Attempts to resurrect an entity using a totem of undying.
+     * Checks both hands for a totem, fires {@link EntityResurrectEvent},
+     * and if not cancelled, consumes the totem and applies vanilla resurrection effects.
+     *
+     * @param target The entity to resurrect
+     * @return true if the entity was resurrected, false otherwise
+     */
+    private static boolean tryResurrect(LivingEntity target) {
+        EntityEquipment equipment = target.getEquipment();
+        if (equipment == null) return false;
+
+        EquipmentSlot totemSlot = null;
+        if (equipment.getItemInMainHand().getType() == Material.TOTEM_OF_UNDYING) {
+            totemSlot = EquipmentSlot.HAND;
+        } else if (equipment.getItemInOffHand().getType() == Material.TOTEM_OF_UNDYING) {
+            totemSlot = EquipmentSlot.OFF_HAND;
+        }
+
+        if (totemSlot == null) return false;
+
+        EntityResurrectEvent event = new EntityResurrectEvent(target, totemSlot);
+        Bukkit.getPluginManager().callEvent(event);
+        if (event.isCancelled()) return false;
+
+        // Consume the totem
+        if (totemSlot == EquipmentSlot.HAND) {
+            equipment.getItemInMainHand().setAmount(equipment.getItemInMainHand().getAmount() - 1);
+        } else {
+            equipment.getItemInOffHand().setAmount(equipment.getItemInOffHand().getAmount() - 1);
+        }
+
+        // Apply vanilla resurrection effects
+        target.setHealth(1.0);
+        target.setAbsorptionAmount(0);
+        target.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 900, 1));
+        target.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION, 100, 1));
+        target.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, 800, 0));
+
+        return true;
     }
 
     private static double calculateScaledDamage(LivingEntity target, double targetHearts) {
