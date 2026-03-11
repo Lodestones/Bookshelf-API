@@ -78,6 +78,13 @@ public class VersionUpdater implements Listener {
                 in.close();
 
                 JSONArray jsonArray = new JSONArray(response.toString());
+                if (jsonArray.isEmpty()) {
+                    plugin.getLogger().severe("=================================");
+                    plugin.getLogger().severe(String.format("Failed to retrieve latest version of %s from Lodestone!", name));
+                    plugin.getLogger().severe("No versions found in the response.");
+                    plugin.getLogger().severe("=================================");
+                    return null;
+                }
                 return ((JSONObject) jsonArray.get(0)).getString("version_number");
             } else {
                 plugin.getLogger().severe("=================================");
