@@ -315,6 +315,31 @@ public class APICustomItemManager implements ICustomItemManager, Listener {
                     customItem.onInventoryHotbar(player, event, heldItem);
             }
         }
+
+        // Detect held-slot item changes from inventory interactions (e.g. moving item out of selected slot)
+        int heldSlot = player.getInventory().getHeldItemSlot();
+        boolean affectsHeldSlot = event.getSlot() == heldSlot
+                || event.getHotbarButton() == heldSlot
+                || event.isShiftClick();
+
+        if (affectsHeldSlot) {
+            ItemStack beforeItem = player.getInventory().getItem(heldSlot);
+            CustomItem beforeCustom = getItemByItemStack(beforeItem);
+            String beforeId = beforeCustom != null ? beforeCustom.id() : null;
+
+            plugin.getServer().getScheduler().runTask(plugin, () -> {
+                ItemStack afterItem = player.getInventory().getItem(heldSlot);
+                CustomItem afterCustom = getItemByItemStack(afterItem);
+                String afterId = afterCustom != null ? afterCustom.id() : null;
+
+                if (Objects.equals(beforeId, afterId)) return;
+
+                if (beforeCustom != null)
+                    beforeCustom.onUnheld(player, null, beforeItem);
+                if (afterCustom != null)
+                    afterCustom.onHeld(player, null, afterItem);
+            });
+        }
     }
 
 } 
