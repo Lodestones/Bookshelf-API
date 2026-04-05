@@ -9,8 +9,27 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Function;
 
 public class PlayerLookupHelper {
+
+    private static Function<String, UUID> nameToUUIDFallback;
+    private static Function<UUID, String> uuidToNameFallback;
+
+    /**
+     * Registers a fallback resolver for name→UUID lookups (e.g. MongoDB username history).
+     */
+    public static void setNameToUUIDFallback(Function<String, UUID> fallback) {
+        nameToUUIDFallback = fallback;
+    }
+
+    /**
+     * Registers a fallback resolver for UUID→name lookups (e.g. MongoDB username history).
+     */
+    public static void setUUIDToNameFallback(Function<UUID, String> fallback) {
+        uuidToNameFallback = fallback;
+    }
+
     /**
      * Resolves a player name to UUID using Mojang API. Returns null if not found or error.
      */
@@ -25,10 +44,17 @@ public class PlayerLookupHelper {
         // Fallback to Mojang API
         try {
             MojangProfile profile = MojangProfile.getMojangProfile(name);
-            return profile != null ? profile.getUniqueId() : null;
+            if (profile != null) return profile.getUniqueId();
         } catch (IOException | org.json.simple.parser.ParseException e) {
-            return null;
+            // Continue to next fallback
         }
+
+        // Fallback to registered resolver (e.g. MongoDB username history)
+        if (nameToUUIDFallback != null) {
+            return nameToUUIDFallback.apply(name);
+        }
+
+        return null;
     }
 
     /**
@@ -45,10 +71,17 @@ public class PlayerLookupHelper {
         // Fallback to Mojang API
         try {
             MojangProfile profile = MojangProfile.getMojangProfileFromUUID(uniqueId.toString());
-            return profile != null ? profile.getName() : null;
+            if (profile != null) return profile.getName();
         } catch (IOException | org.json.simple.parser.ParseException e) {
-            return null;
+            // Continue to next fallback
         }
+
+        // Fallback to registered resolver (e.g. MongoDB username history)
+        if (uuidToNameFallback != null) {
+            return uuidToNameFallback.apply(uniqueId);
+        }
+
+        return null;
     }
 
     /**
@@ -61,4 +94,4 @@ public class PlayerLookupHelper {
         }
         return names;
     }
-} 
+}
