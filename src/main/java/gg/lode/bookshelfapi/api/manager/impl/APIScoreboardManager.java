@@ -1,7 +1,6 @@
 package gg.lode.bookshelfapi.api.manager.impl;
 
 import gg.lode.bookshelfapi.api.Task;
-import gg.lode.bookshelfapi.api.TaskHandle;
 import gg.lode.bookshelfapi.api.board.AbstractBoard;
 import gg.lode.bookshelfapi.api.manager.IScoreboardManager;
 import net.kyori.adventure.text.Component;
@@ -9,6 +8,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.scoreboard.Team;
 import org.jetbrains.annotations.Nullable;
 
@@ -21,7 +21,7 @@ public class APIScoreboardManager implements IScoreboardManager, Listener {
     private final static String DEFAULT_TEAM_NAME = "default_team";
     protected final JavaPlugin plugin;
     protected final HashMap<UUID, AbstractBoard> playerBoards = new HashMap<>();
-    private TaskHandle taskHandle;
+    private BukkitTask taskHandle;
 
     public APIScoreboardManager(JavaPlugin plugin) {
         this.plugin = plugin;

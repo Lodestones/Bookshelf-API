@@ -1,11 +1,11 @@
 package gg.lode.bookshelfapi.api.manager.impl;
 
 import gg.lode.bookshelfapi.api.Task;
-import gg.lode.bookshelfapi.api.TaskHandle;
 import gg.lode.bookshelfapi.api.manager.ICooldownManager;
 import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,8 +16,8 @@ import java.util.function.Consumer;
 public class APICooldownManager implements ICooldownManager {
     private final JavaPlugin plugin;
     private final Map<String, Long> cooldowns = new HashMap<>();
-    private final Map<String, TaskHandle> callbacks = new HashMap<>();
-    private final TaskHandle timerTask;
+    private final Map<String, BukkitTask> callbacks = new HashMap<>();
+    private final BukkitTask timerTask;
 
     public APICooldownManager(JavaPlugin plugin) {
         this.plugin = plugin;
