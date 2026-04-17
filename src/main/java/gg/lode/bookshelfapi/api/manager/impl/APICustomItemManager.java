@@ -1,5 +1,7 @@
 package gg.lode.bookshelfapi.api.manager.impl;
 
+import gg.lode.bookshelfapi.api.Task;
+import org.bukkit.plugin.java.JavaPlugin;
 import gg.lode.bookshelfapi.api.item.CustomItem;
 import gg.lode.bookshelfapi.api.item.ItemBuilder;
 import gg.lode.bookshelfapi.api.manager.ICustomItemManager;
@@ -327,7 +329,7 @@ public class APICustomItemManager implements ICustomItemManager, Listener {
             CustomItem beforeCustom = getItemByItemStack(beforeItem);
             String beforeId = beforeCustom != null ? beforeCustom.id() : null;
 
-            plugin.getServer().getScheduler().runTask(plugin, () -> {
+            Task.run((JavaPlugin) plugin, () -> {
                 ItemStack afterItem = player.getInventory().getItem(heldSlot);
                 CustomItem afterCustom = getItemByItemStack(afterItem);
                 String afterId = afterCustom != null ? afterCustom.id() : null;

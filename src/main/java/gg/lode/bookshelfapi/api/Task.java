@@ -1,89 +1,83 @@
 package gg.lode.bookshelfapi.api;
 
+import gg.lode.bookshelfapi.api.compat.FoliaCompat;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitTask;
+
+import java.util.concurrent.TimeUnit;
 
 public class Task {
 
-    /**
-     * Schedule a runnable to be executed synchronously on the next tick.
-     *
-     * @param plugin the Plugin owning and executing the task
-     * @param runnable a Runnable containing code to be executed in the task
-     * @return a BukkitTask containing the scheduled task
-     */
-    public static BukkitTask run(JavaPlugin plugin, Runnable runnable) {
-        return Bukkit.getScheduler().runTask(plugin, runnable);
+    private static final long MS_PER_TICK = 50L;
+
+    public static TaskHandle run(JavaPlugin plugin, Runnable runnable) {
+        if (FoliaCompat.isFolia()) {
+            return TaskHandle.of(
+                    Bukkit.getServer().getGlobalRegionScheduler().run(plugin, task -> runnable.run())
+            );
+        }
+        return TaskHandle.of(Bukkit.getScheduler().runTask(plugin, runnable));
     }
 
-    /**
-     * Schedule a runnable to be executed asynchronously on the next tick.
-     *
-     * @param plugin the Plugin owning and executing the task
-     * @param runnable a Runnable containing code to be executed in the task
-     * @return a BukkitTask containing the scheduled task
-     */
-    public static BukkitTask runAsync(JavaPlugin plugin, Runnable runnable) {
-        return Bukkit.getScheduler().runTaskAsynchronously(plugin, runnable);
+    public static TaskHandle runAsync(JavaPlugin plugin, Runnable runnable) {
+        if (FoliaCompat.isFolia()) {
+            return TaskHandle.of(
+                    Bukkit.getServer().getAsyncScheduler().runNow(plugin, task -> runnable.run())
+            );
+        }
+        return TaskHandle.of(Bukkit.getScheduler().runTaskAsynchronously(plugin, runnable));
     }
 
-    /**
-     * Schedule a runnable to be repeatedly executed synchronously on a timer.
-     *
-     * @param plugin the Plugin owning and executing the task
-     * @param runnable a Runnable containing code to be executed in the task
-     * @param delay the delay, in ticks, before the first execution of the task
-     * @param period the delay, in ticks, between each sequential execution of the task
-     * @return a BukkitTask containing the scheduled task
-     */
-    public static BukkitTask timer(JavaPlugin plugin, Runnable runnable, long delay, long period) {
-        return Bukkit.getScheduler().runTaskTimer(plugin, runnable, delay, period);
+    public static TaskHandle timer(JavaPlugin plugin, Runnable runnable, long delay, long period) {
+        if (FoliaCompat.isFolia()) {
+            return TaskHandle.of(
+                    Bukkit.getServer().getGlobalRegionScheduler().runAtFixedRate(
+                            plugin, task -> runnable.run(), Math.max(delay, 1L), period)
+            );
+        }
+        return TaskHandle.of(Bukkit.getScheduler().runTaskTimer(plugin, runnable, delay, period));
     }
 
-    /**
-     * Schedule a runnable to be repeatedly executed asynchronously on a timer.
-     *
-     * @param plugin the Plugin owning and executing the task
-     * @param runnable a Runnable containing code to be executed in the task
-     * @param delay the delay, in ticks, before the first execution of the task
-     * @param period the delay, in ticks, between each sequential execution of the task
-     * @return a BukkitTask containing the scheduled task
-     */
-    public static BukkitTask timerAsync(JavaPlugin plugin, Runnable runnable, long delay, long period) {
-        return Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, runnable, delay, period);
+    public static TaskHandle timerAsync(JavaPlugin plugin, Runnable runnable, long delay, long period) {
+        if (FoliaCompat.isFolia()) {
+            return TaskHandle.of(
+                    Bukkit.getServer().getAsyncScheduler().runAtFixedRate(
+                            plugin, task -> runnable.run(),
+                            Math.max(delay, 1L) * MS_PER_TICK, period * MS_PER_TICK, TimeUnit.MILLISECONDS)
+            );
+        }
+        return TaskHandle.of(Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, runnable, delay, period));
     }
 
-    /**
-     * Schedule a runnable to be executed synchronously after a specified delay.
-     *
-     * @param plugin the Plugin owning and executing the task
-     * @param runnable a Runnable containing code to be executed in the task
-     * @param delay the delay, in ticks, before running the task
-     * @return a BukkitTask containing the scheduled task
-     */
-    public static BukkitTask later(JavaPlugin plugin, Runnable runnable, long delay) {
-        return Bukkit.getScheduler().runTaskLater(plugin, runnable, delay);
+    public static TaskHandle later(JavaPlugin plugin, Runnable runnable, long delay) {
+        if (FoliaCompat.isFolia()) {
+            if (delay <= 0) {
+                return run(plugin, runnable);
+            }
+            return TaskHandle.of(
+                    Bukkit.getServer().getGlobalRegionScheduler().runDelayed(plugin, task -> runnable.run(), delay)
+            );
+        }
+        return TaskHandle.of(Bukkit.getScheduler().runTaskLater(plugin, runnable, delay));
     }
 
-    /**
-     * Schedule a runnable to be executed asynchronously after a specified delay.
-     *
-     * @param plugin the Plugin owning and executing the task
-     * @param runnable a Runnable containing code to be executed in the task
-     * @param delay the delay, in ticks, before running the task
-     * @return a BukkitTask containing the scheduled task
-     */
-    public static BukkitTask laterAsync(JavaPlugin plugin, Runnable runnable, long delay) {
-        return Bukkit.getScheduler().runTaskLaterAsynchronously(plugin, runnable, delay);
+    public static TaskHandle laterAsync(JavaPlugin plugin, Runnable runnable, long delay) {
+        if (FoliaCompat.isFolia()) {
+            return TaskHandle.of(
+                    Bukkit.getServer().getAsyncScheduler().runDelayed(
+                            plugin, task -> runnable.run(),
+                            Math.max(delay, 1L) * MS_PER_TICK, TimeUnit.MILLISECONDS)
+            );
+        }
+        return TaskHandle.of(Bukkit.getScheduler().runTaskLaterAsynchronously(plugin, runnable, delay));
     }
 
-    /**
-     * Cancel and remove all tasks scheduled by a Plugin.
-     *
-     * @param plugin the Plugin owning the tasks to be removed
-     */
     public static void cancelAllPluginTasks(JavaPlugin plugin) {
+        if (FoliaCompat.isFolia()) {
+            Bukkit.getServer().getGlobalRegionScheduler().cancelTasks(plugin);
+            Bukkit.getServer().getAsyncScheduler().cancelTasks(plugin);
+            return;
+        }
         Bukkit.getScheduler().cancelTasks(plugin);
     }
 }

@@ -1,6 +1,7 @@
 package gg.lode.bookshelfapi.api.manager;
 
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -24,6 +25,20 @@ public interface IModerationManager {
     CompletableFuture<Void> ban(UUID player, String reason, @Nullable CommandSender issuer, long duration);
 
     CompletableFuture<Void> unban(UUID player, String reason, @Nullable CommandSender issuer);
+
+    // --- Ban by Name / Player ---
+
+    CompletableFuture<Boolean> isBanned(String playerName);
+
+    CompletableFuture<Void> ban(String playerName, String reason, @Nullable CommandSender issuer, long duration);
+
+    CompletableFuture<Void> unban(String playerName, String reason, @Nullable CommandSender issuer);
+
+    CompletableFuture<Boolean> isBanned(Player player);
+
+    CompletableFuture<Void> ban(Player player, String reason, @Nullable CommandSender issuer, long duration);
+
+    CompletableFuture<Void> unban(Player player, String reason, @Nullable CommandSender issuer);
 
     // --- IP Ban ---
 
