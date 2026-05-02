@@ -45,7 +45,7 @@ public class VersionUpdater implements Listener {
     @EventHandler
     public void on(PlayerJoinEvent event) {
         Player player = event.getPlayer();
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+        Task.later(plugin, () -> {
             if (player.isOp()) {
                 if (this.latestVersion != null) {
                     if (isNewerVersion(this.latestVersion, currentVersion)) {

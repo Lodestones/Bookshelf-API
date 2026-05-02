@@ -1,10 +1,10 @@
 package gg.lode.bookshelfapi.api.manager.impl;
 
+import gg.lode.bookshelfapi.api.Task;
 import gg.lode.bookshelfapi.api.manager.ICooldownManager;
 import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.ArrayList;
@@ -13,14 +13,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-public class APICooldownManager extends BukkitRunnable implements ICooldownManager {
+public class APICooldownManager implements ICooldownManager {
     private final JavaPlugin plugin;
     private final Map<String, Long> cooldowns = new HashMap<>();
     private final Map<String, BukkitTask> callbacks = new HashMap<>();
+    private final BukkitTask timerTask;
 
     public APICooldownManager(JavaPlugin plugin) {
         this.plugin = plugin;
-        this.runTaskTimer(plugin, 1, 1);
+        this.timerTask = Task.timer(plugin, this::run, 1, 1);
     }
 
     @Override
@@ -40,7 +41,7 @@ public class APICooldownManager extends BukkitRunnable implements ICooldownManag
             callbacks.get(player.getUniqueId() + "-" + id).cancel();
         }
 
-        callbacks.put(player.getUniqueId() + "-" + id, plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+        callbacks.put(player.getUniqueId() + "-" + id, Task.later(plugin, () -> {
             if (callback != null) {
                 callback.accept(player);
             }
@@ -55,7 +56,7 @@ public class APICooldownManager extends BukkitRunnable implements ICooldownManag
             callbacks.get(id).cancel();
         }
 
-        callbacks.put(id, plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+        callbacks.put(id, Task.later(plugin, () -> {
             if (callback != null) {
                 callback.accept(null);
             }
@@ -107,7 +108,6 @@ public class APICooldownManager extends BukkitRunnable implements ICooldownManag
         return Math.max(remaining, 0);
     }
 
-    @Override
     public void run() {
         List<String> keysToRemove = new ArrayList<>();
         cooldowns.forEach((key, cooldown) -> {
