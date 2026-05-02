@@ -43,6 +43,18 @@ public class MenuBuilder {
         rowBuilders[row].setSlot(column, itemStack, null);
     }
 
+    public void setServer(int row, int column, ItemStack itemStack, @Nullable Consumer<InventoryClickEvent> consumer) {
+        rowBuilders[row].setServerSlot(column, itemStack, consumer);
+    }
+
+    public void setEmptyServer(int row, int column, @Nullable Consumer<InventoryClickEvent> consumer) {
+        rowBuilders[row].setEmptyServerSlot(column, consumer);
+    }
+
+    public void setPacket(int row, int column, ItemStack itemStack, @Nullable Consumer<InventoryClickEvent> consumer) {
+        rowBuilders[row].setPacketSlot(column, itemStack, consumer);
+    }
+
     public RowBuilder[] getRowBuilders() {
         return rowBuilders;
     }

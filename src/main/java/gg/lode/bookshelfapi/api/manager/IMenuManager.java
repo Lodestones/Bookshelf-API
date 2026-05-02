@@ -1,7 +1,10 @@
 package gg.lode.bookshelfapi.api.manager;
 
 import gg.lode.bookshelfapi.api.menu.Menu;
+import gg.lode.bookshelfapi.api.menu.PacketMenuHandler;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
 
@@ -19,4 +22,9 @@ public interface IMenuManager {
 
     Menu getActiveMenu(UUID uniqueId);
 
+    void setPacketMenuHandler(@Nullable PacketMenuHandler handler);
+
+    @Nullable PacketMenuHandler getPacketMenuHandler();
+
+    void dispatchClick(Player player, InventoryClickEvent event);
 }

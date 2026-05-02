@@ -2,6 +2,7 @@ package gg.lode.bookshelfapi.api.menu;
 
 import gg.lode.bookshelfapi.BookshelfAPI;
 import gg.lode.bookshelfapi.api.manager.IMenuManager;
+import gg.lode.bookshelfapi.api.menu.PacketMenuHandler;
 import gg.lode.bookshelfapi.api.menu.build.MenuBuilder;
 import gg.lode.bookshelfapi.api.menu.build.RowBuilder;
 import gg.lode.bookshelfapi.api.menu.build.TopMenuBuilder;
@@ -10,14 +11,23 @@ import gg.lode.bookshelfapi.api.util.VariableContext;
 import net.infumia.titleupdater.TitleUpdater;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public abstract class Menu implements InventoryHolder {
+
+    /**
+     * Server-side stand-in for packet-only slots. Vanilla shift-click and
+     * collect-to-cursor logic skips slots holding a different item, so a
+     * unique placeholder keeps real player items from merging into them.
+     */
+    public static final ItemStack PACKET_PLACEHOLDER = new ItemStack(Material.BARRIER);
 
     protected Inventory inventory;
     private TopMenuBuilder topMenuBuilder;
@@ -49,9 +59,20 @@ public abstract class Menu implements InventoryHolder {
             @NotNull RowBuilder.Slot[] slots = rowBuilder.getSlots();
             for (int x = 0; x < slots.length; x++) {
                 RowBuilder.Slot slot = slots[x];
-                if (slot.itemStack() == null) continue;
-
-                this.inventory.setItem((y * 9) + x, slot.itemStack());
+                int rawSlot = (y * 9) + x;
+                boolean packet = isPacketSlot(slot);
+                if (packet) {
+                    // Server inventory holds the placeholder so vanilla move logic
+                    // never merges player items into a packet-only slot. The real
+                    // visual is sent to the client via packet rewrite.
+                    this.inventory.setItem(rawSlot, PACKET_PLACEHOLDER.clone());
+                } else {
+                    if (slot.itemStack() == null) {
+                        this.inventory.setItem(rawSlot, null);
+                    } else {
+                        this.inventory.setItem(rawSlot, slot.itemStack());
+                    }
+                }
             }
         }
 
@@ -83,11 +104,24 @@ public abstract class Menu implements InventoryHolder {
 
     public void update() {
         this.init();
+        PacketMenuHandler handler = packetHandlerOrNull();
+        if (handler != null && this.topMenuBuilder != null && this.topMenuBuilder.isPacketBased()) {
+            handler.onUpdate(this);
+        }
     }
 
     public void rebuild() {
         this.inventory.clear();
         this.init();
+        PacketMenuHandler handler = packetHandlerOrNull();
+        if (handler != null && this.topMenuBuilder != null && this.topMenuBuilder.isPacketBased()) {
+            handler.onUpdate(this);
+        }
+    }
+
+    private @Nullable PacketMenuHandler packetHandlerOrNull() {
+        IMenuManager mm = BookshelfAPI.getApi() != null ? BookshelfAPI.getApi().getMenuManager() : null;
+        return mm != null ? mm.getPacketMenuHandler() : null;
     }
 
     public void setTitle(String str) {
@@ -108,6 +142,15 @@ public abstract class Menu implements InventoryHolder {
         topMenuBuilder.getOpenActions().forEach(Runnable::run);
         menuManager.register(player.getUniqueId(), this);
 
+        boolean packetBased = topMenuBuilder.isPacketBased();
+        PacketMenuHandler handler = menuManager.getPacketMenuHandler();
+
+        // Pre-mark for packet capture so the platform listener can record
+        // the windowId from the next outbound OpenWindow packet.
+        if (packetBased && handler != null) {
+            handler.onOpen(this);
+        }
+
         // if open inventory is the current, ignore
         if (player.getOpenInventory().getTopInventory().equals(this.inventory)) return;
 
@@ -124,6 +167,10 @@ public abstract class Menu implements InventoryHolder {
     }
 
     public void close() {
+        PacketMenuHandler handler = packetHandlerOrNull();
+        if (handler != null && this.topMenuBuilder != null && this.topMenuBuilder.isPacketBased()) {
+            handler.onClose(this);
+        }
         this.player.closeInventory(InventoryCloseEvent.Reason.PLUGIN);
     }
 
@@ -131,8 +178,51 @@ public abstract class Menu implements InventoryHolder {
         return topMenuBuilder;
     }
 
+    public Player getPlayer() {
+        return player;
+    }
+
     public MenuBuilder getBottomMenuBuilder() {
         return bottomMenuBuilder;
+    }
+
+    /**
+     * @return true if the given top-inventory raw slot is a packet-only slot.
+     */
+    public boolean isPacketSlot(int rawSlot) {
+        if (topMenuBuilder == null) return false;
+        int y = rawSlot / 9;
+        int x = rawSlot % 9;
+        RowBuilder[] rows = topMenuBuilder.getRowBuilders();
+        if (y < 0 || y >= rows.length) return false;
+        RowBuilder rb = rows[y];
+        if (rb == null) return false;
+        RowBuilder.Slot[] slots = rb.getSlots();
+        if (x < 0 || x >= slots.length) return false;
+        return isPacketSlot(slots[x]);
+    }
+
+    /**
+     * @return the item that should be displayed to the client at this raw slot
+     * if it is a packet slot; otherwise null (let server inventory state show through).
+     */
+    public @Nullable ItemStack getPacketDisplayItem(int rawSlot) {
+        if (topMenuBuilder == null) return null;
+        int y = rawSlot / 9;
+        int x = rawSlot % 9;
+        RowBuilder[] rows = topMenuBuilder.getRowBuilders();
+        if (y < 0 || y >= rows.length) return null;
+        RowBuilder rb = rows[y];
+        if (rb == null) return null;
+        RowBuilder.Slot[] slots = rb.getSlots();
+        if (x < 0 || x >= slots.length) return null;
+        RowBuilder.Slot slot = slots[x];
+        return isPacketSlot(slot) ? slot.itemStack() : null;
+    }
+
+    private boolean isPacketSlot(RowBuilder.Slot slot) {
+        if (slot.packet() != null) return slot.packet();
+        return topMenuBuilder != null && topMenuBuilder.isPacketBased();
     }
 
     @NotNull protected abstract TopMenuBuilder getTopMenuBuilder(TopMenuBuilder builder);

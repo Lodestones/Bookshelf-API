@@ -15,6 +15,7 @@ public class TopMenuBuilder extends MenuBuilder {
 
     private Component title = Component.empty();
     private int rows;
+    private boolean packetBased = false;
 
     protected List<Consumer<InventoryCloseEvent>> closeActions;
     protected List<Runnable> openActions;
@@ -144,5 +145,14 @@ public class TopMenuBuilder extends MenuBuilder {
             throw new IllegalArgumentException("Invalid row size! Must be from 1-6");
 
         return rows;
+    }
+
+    public TopMenuBuilder setPacketBased(boolean packetBased) {
+        this.packetBased = packetBased;
+        return this;
+    }
+
+    public boolean isPacketBased() {
+        return packetBased;
     }
 }

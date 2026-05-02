@@ -1,7 +1,5 @@
 package gg.lode.bookshelfapi.api.item;
 
-import com.mojang.authlib.GameProfile;
-import com.mojang.authlib.properties.Property;
 import gg.lode.bookshelfapi.api.util.MiniMessageHelper;
 import gg.lode.bookshelfapi.api.util.PaperCapabilities;
 import net.kyori.adventure.text.Component;
@@ -20,9 +18,14 @@ import org.bukkit.inventory.meta.trim.TrimPattern;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionEffect;
+import org.bukkit.profile.PlayerProfile;
+import org.bukkit.profile.PlayerTextures;
+import org.json.JSONObject;
 
 import javax.annotation.Nonnegative;
-import java.lang.reflect.Field;
+import java.net.URI;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -382,6 +385,16 @@ public class ItemBuilder {
         return this;
     }
 
+    /**
+     * Apply a custom head texture. Accepts either:
+     * <ul>
+     *   <li>A raw {@code https://textures.minecraft.net/texture/...} URL</li>
+     *   <li>The base64 textures property value (decoded JSON form
+     *       {@code {"textures":{"SKIN":{"url":"..."}}}})</li>
+     * </ul>
+     * Uses {@link PlayerProfile} so behavior survives Paper's component-item
+     * refactor (1.20.5+) without NMS reflection.
+     */
     public ItemBuilder skull(String base64) {
         this.base64Skull = base64;
         return this;
@@ -458,17 +471,12 @@ public class ItemBuilder {
         }
         if (meta instanceof SkullMeta skullMeta) {
             if (this.base64Skull != null) {
-                GameProfile profile = new GameProfile(UUID.randomUUID(), "Apollo30");
-                profile.getProperties().put("textures", new Property("textures", this.base64Skull));
-                try {
-                    Field profileField = skullMeta.getClass().getDeclaredField("profile");
-                    profileField.setAccessible(true);
-                    profileField.set(skullMeta, profile);
-                } catch (NoSuchFieldException | IllegalAccessException e) {
-                    e.printStackTrace();
-                }
+                applySkullTexture(skullMeta, this.base64Skull);
             } else if (this.skullPlayer != null) {
-                skullMeta.setOwningPlayer(this.skullPlayer);
+                PlayerProfile profile = Bukkit.createPlayerProfile(
+                        this.skullPlayer.getUniqueId(),
+                        this.skullPlayer.getName());
+                skullMeta.setOwnerProfile(profile);
             }
         }
 
@@ -486,4 +494,27 @@ public class ItemBuilder {
         return this.itemStack;
     }
 
+    private static void applySkullTexture(SkullMeta meta, String input) {
+        try {
+            String trimmed = input.trim();
+            URL url;
+            if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+                url = URI.create(trimmed).toURL();
+            } else {
+                String json = new String(Base64.getDecoder().decode(trimmed), StandardCharsets.UTF_8);
+                String texUrl = new JSONObject(json)
+                        .getJSONObject("textures")
+                        .getJSONObject("SKIN")
+                        .getString("url");
+                url = URI.create(texUrl).toURL();
+            }
+            PlayerProfile profile = Bukkit.createPlayerProfile(UUID.randomUUID());
+            PlayerTextures textures = profile.getTextures();
+            textures.setSkin(url);
+            profile.setTextures(textures);
+            meta.setOwnerProfile(profile);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }

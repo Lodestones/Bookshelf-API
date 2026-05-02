@@ -3,6 +3,7 @@ package gg.lode.bookshelfapi.api.manager.impl;
 import gg.lode.bookshelfapi.api.Task;
 import gg.lode.bookshelfapi.api.manager.IMenuManager;
 import gg.lode.bookshelfapi.api.menu.Menu;
+import gg.lode.bookshelfapi.api.menu.PacketMenuHandler;
 import gg.lode.bookshelfapi.api.menu.build.MenuBuilder;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
@@ -22,6 +23,7 @@ import java.util.UUID;
 public class APIMenuManager implements IMenuManager, Listener {
     private static final HashMap<UUID, Menu> activeMenus = new HashMap<>();
     private final JavaPlugin plugin;
+    private @Nullable PacketMenuHandler packetMenuHandler;
 
     public APIMenuManager(JavaPlugin plugin) {
         this.plugin = plugin;
@@ -77,23 +79,39 @@ public class APIMenuManager implements IMenuManager, Listener {
         if (clickedInventory == null) {
             return;
         }
-        InventoryView view = event.getView();
-        if (activeMenus.containsKey(player.getUniqueId())) {
-            int slot = event.getSlot();
-            Menu menu = activeMenus.get(player.getUniqueId());
-            // Fire top menu click actions for all clicks (top and bottom inventory)
-            menu.getTopMenuBuilder().getClickActions().forEach(c -> c.accept(event));
+        dispatchClick(player, event);
+    }
 
-            if (view.getTopInventory().equals(clickedInventory)) {
-                menu.getTopMenuBuilder().process(slot, event);
-            } else if (view.getBottomInventory().equals(clickedInventory)) {
-                MenuBuilder bottomMenuBuilder = menu.getBottomMenuBuilder();
-                if (bottomMenuBuilder == null) {
-                    return;
-                }
-                bottomMenuBuilder.process(slot, event);
+    @Override
+    public void dispatchClick(Player player, InventoryClickEvent event) {
+        InventoryView view = event.getView();
+        Inventory clickedInventory = event.getClickedInventory();
+        if (!activeMenus.containsKey(player.getUniqueId())) return;
+
+        int slot = event.getSlot();
+        Menu menu = activeMenus.get(player.getUniqueId());
+        // Fire top menu click actions for all clicks (top and bottom inventory)
+        menu.getTopMenuBuilder().getClickActions().forEach(c -> c.accept(event));
+
+        if (clickedInventory != null && view.getTopInventory().equals(clickedInventory)) {
+            menu.getTopMenuBuilder().process(slot, event);
+        } else if (clickedInventory != null && view.getBottomInventory().equals(clickedInventory)) {
+            MenuBuilder bottomMenuBuilder = menu.getBottomMenuBuilder();
+            if (bottomMenuBuilder == null) {
+                return;
             }
+            bottomMenuBuilder.process(slot, event);
         }
+    }
+
+    @Override
+    public void setPacketMenuHandler(@Nullable PacketMenuHandler handler) {
+        this.packetMenuHandler = handler;
+    }
+
+    @Override
+    public @Nullable PacketMenuHandler getPacketMenuHandler() {
+        return packetMenuHandler;
     }
 
     @EventHandler
@@ -107,6 +125,9 @@ public class APIMenuManager implements IMenuManager, Listener {
             return;
         }
         menu.getTopMenuBuilder().getCloseActions().forEach(closeEvent -> closeEvent.accept(event));
+        if (packetMenuHandler != null && menu.getTopMenuBuilder().isPacketBased()) {
+            packetMenuHandler.onClose(menu);
+        }
         if (!event.getReason().equals(InventoryCloseEvent.Reason.OPEN_NEW)) {
             Task.later(this.plugin, () -> activeMenus.remove(player.getUniqueId()), 1L);
         }
@@ -114,6 +135,10 @@ public class APIMenuManager implements IMenuManager, Listener {
 
     @EventHandler
     public void on(PlayerQuitEvent event) {
+        Menu menu = activeMenus.get(event.getPlayer().getUniqueId());
+        if (menu != null && packetMenuHandler != null && menu.getTopMenuBuilder().isPacketBased()) {
+            packetMenuHandler.onClose(menu);
+        }
         activeMenus.remove(event.getPlayer().getUniqueId());
     }
 }
