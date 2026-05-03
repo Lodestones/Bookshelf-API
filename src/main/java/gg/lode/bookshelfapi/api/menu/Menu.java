@@ -12,22 +12,49 @@ import net.infumia.titleupdater.TitleUpdater;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.function.Consumer;
+
 public abstract class Menu implements InventoryHolder {
+
+    /**
+     * PDC sentinel marking the packet placeholder so the platform listener can
+     * tell it apart from a real item written into the slot via inv.setItem.
+     */
+    public static final NamespacedKey PACKET_PLACEHOLDER_KEY =
+            NamespacedKey.fromString("bookshelf:packet_placeholder");
 
     /**
      * Server-side stand-in for packet-only slots. Vanilla shift-click and
      * collect-to-cursor logic skips slots holding a different item, so a
      * unique placeholder keeps real player items from merging into them.
+     * Tagged with {@link #PACKET_PLACEHOLDER_KEY} so the listener can detect
+     * user-driven inv.setItem refreshes versus the API's own placeholder writes.
      */
-    public static final ItemStack PACKET_PLACEHOLDER = new ItemStack(Material.BARRIER);
+    public static final ItemStack PACKET_PLACEHOLDER = createPlaceholder();
+
+    private static ItemStack createPlaceholder() {
+        ItemStack item = new ItemStack(Material.BARRIER);
+        item.editPersistentDataContainer(c -> c.set(PACKET_PLACEHOLDER_KEY, PersistentDataType.BYTE, (byte) 1));
+        return item;
+    }
+
+    /**
+     * @return true if the given stack carries the packet-placeholder sentinel.
+     */
+    public static boolean isPacketPlaceholder(@Nullable ItemStack item) {
+        if (item == null || item.getType() != Material.BARRIER) return false;
+        return item.getPersistentDataContainer().has(PACKET_PLACEHOLDER_KEY, PersistentDataType.BYTE);
+    }
 
     protected Inventory inventory;
     private TopMenuBuilder topMenuBuilder;
@@ -223,6 +250,35 @@ public abstract class Menu implements InventoryHolder {
     private boolean isPacketSlot(RowBuilder.Slot slot) {
         if (slot.packet() != null) return slot.packet();
         return topMenuBuilder != null && topMenuBuilder.isPacketBased();
+    }
+
+    /**
+     * Replace the visual on a packet slot in {@link #topMenuBuilder}, preserving
+     * the existing click handler and packet flag. Called by the platform listener
+     * when it sees a server-driven {@code inv.setItem} refresh on a packet slot,
+     * so subsequent {@link #getPacketDisplayItem(int)} lookups return the new item.
+     *
+     * @return true if the slot existed and was updated.
+     */
+    public boolean syncSlotFromServer(int rawSlot, @Nullable ItemStack newItem) {
+        if (topMenuBuilder == null) return false;
+        int y = rawSlot / 9;
+        int x = rawSlot % 9;
+        RowBuilder[] rows = topMenuBuilder.getRowBuilders();
+        if (y < 0 || y >= rows.length) return false;
+        RowBuilder rb = rows[y];
+        if (rb == null) return false;
+        RowBuilder.Slot[] slots = rb.getSlots();
+        if (x < 0 || x >= slots.length) return false;
+        RowBuilder.Slot existing = slots[x];
+        Consumer<org.bukkit.event.inventory.InventoryClickEvent> handler = existing.event();
+        Boolean packetFlag = existing.packet();
+        if (newItem == null) {
+            rb.setSlot(x, new ItemStack(Material.AIR), handler, packetFlag);
+        } else {
+            rb.setSlot(x, newItem, handler, packetFlag);
+        }
+        return true;
     }
 
     @NotNull protected abstract TopMenuBuilder getTopMenuBuilder(TopMenuBuilder builder);

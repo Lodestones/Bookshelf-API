@@ -54,7 +54,7 @@ public class EntityHelper {
         player.setExperienceLevelAndProgress(0);
 
         player.clearActivePotionEffects();
-        player.setHealth(Objects.requireNonNull(player.getAttribute(Attribute.GENERIC_MAX_HEALTH)).getValue());
+        player.setHealth(Objects.requireNonNull(player.getAttribute(Attribute.MAX_HEALTH)).getValue());
         player.setFoodLevel(20);
 
         for (Attribute attribute : Attribute.values()) {
@@ -64,8 +64,8 @@ public class EntityHelper {
             }
         }
 
-        Objects.requireNonNull(player.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE)).setBaseValue(1);
-        Objects.requireNonNull(player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED)).setBaseValue(0.1);
+        Objects.requireNonNull(player.getAttribute(Attribute.ATTACK_DAMAGE)).setBaseValue(1);
+        Objects.requireNonNull(player.getAttribute(Attribute.MOVEMENT_SPEED)).setBaseValue(0.1);
     }
 
     @SuppressWarnings("deprecation")
@@ -97,7 +97,7 @@ public class EntityHelper {
     public static double reduceDamageByResistance(LivingEntity damaged, double damage) {
 
         final double armorReduce;
-        var armorAtt = damaged.getAttribute(Attribute.GENERIC_ARMOR);
+        var armorAtt = damaged.getAttribute(Attribute.ARMOR);
         if (armorAtt != null) {
             var armorAttValue = armorAtt.getValue();
             armorReduce = damage - (damage * (1 - (armorAttValue / (armorAttValue + 20))));
@@ -106,7 +106,7 @@ public class EntityHelper {
         }
 
         final double armorToughnessReduce;
-        var armorToughnessAtt = damaged.getAttribute(Attribute.GENERIC_ARMOR_TOUGHNESS);
+        var armorToughnessAtt = damaged.getAttribute(Attribute.ARMOR_TOUGHNESS);
         if (armorToughnessAtt != null) {
             var armorToughnessAttValue = armorToughnessAtt.getValue();
             armorToughnessReduce = damage - (damage * (1 - (armorToughnessAttValue / (armorToughnessAttValue + 50))));

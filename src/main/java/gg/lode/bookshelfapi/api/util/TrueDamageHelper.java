@@ -225,8 +225,8 @@ public final class TrueDamageHelper {
     private static double calculateScaledDamage(LivingEntity target, double targetHearts) {
         double baselineReduction = calculateTotalReduction(BASELINE_ARMOR, BASELINE_TOUGHNESS, BASELINE_PROTECTION_LEVEL, targetHearts);
 
-        double armor = Objects.requireNonNull(target.getAttribute(Attribute.GENERIC_ARMOR)).getValue();
-        double toughness = Objects.requireNonNull(target.getAttribute(Attribute.GENERIC_ARMOR_TOUGHNESS)).getValue();
+        double armor = Objects.requireNonNull(target.getAttribute(Attribute.ARMOR)).getValue();
+        double toughness = Objects.requireNonNull(target.getAttribute(Attribute.ARMOR_TOUGHNESS)).getValue();
         int protectionLevel = getTotalProtectionLevel(target);
         double actualReduction = calculateTotalReduction(armor, toughness, protectionLevel, targetHearts);
 
@@ -260,7 +260,7 @@ public final class TrueDamageHelper {
         if (equipment == null) return 0;
         for (ItemStack item : equipment.getArmorContents()) {
             if (item != null) {
-                total += item.getEnchantmentLevel(Enchantment.PROTECTION_ENVIRONMENTAL);
+                total += item.getEnchantmentLevel(Enchantment.PROTECTION);
             }
         }
         return total;

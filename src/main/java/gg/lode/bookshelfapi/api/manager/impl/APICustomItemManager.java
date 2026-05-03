@@ -20,6 +20,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.PrepareAnvilEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.Nullable;
 
@@ -101,8 +102,8 @@ public class APICustomItemManager implements ICustomItemManager, Listener {
 
     @Override
     public String getIdByItemStack(ItemStack itemStack) {
-        if (isEmpty(itemStack) || !hasData(itemStack)) return null;
-        return itemStack.getItemMeta().getPersistentDataContainer().get(itemKey, org.bukkit.persistence.PersistentDataType.STRING);
+        if (isEmpty(itemStack)) return null;
+        return itemStack.getPersistentDataContainer().get(itemKey, PersistentDataType.STRING);
     }
 
     private boolean isEmpty(ItemStack item) {
@@ -129,10 +130,6 @@ public class APICustomItemManager implements ICustomItemManager, Listener {
     @Override
     public ItemBuilder getItemBuilderByClass(Class<? extends CustomItem> itemClass) {
         return getItemBuilderById(Objects.requireNonNull(getItemByClass(itemClass)).id());
-    }
-
-    private boolean hasData(ItemStack itemStack) {
-        return (itemStack.hasItemMeta() && !itemStack.getItemMeta().getPersistentDataContainer().isEmpty());
     }
 
     @Override

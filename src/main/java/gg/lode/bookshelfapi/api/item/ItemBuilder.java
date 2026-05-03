@@ -480,11 +480,13 @@ public class ItemBuilder {
             }
         }
 
-        stringTags.forEach((key, value) -> meta.getPersistentDataContainer().set(key, PersistentDataType.STRING, value));
-        tags.forEach(key -> meta.getPersistentDataContainer().set(key, PersistentDataType.BOOLEAN, true));
         // Attribute modifiers removed for modern versions
         meta.lore(this.lore);
         this.itemStack.setItemMeta(meta);
+        this.itemStack.editPersistentDataContainer(container -> {
+            stringTags.forEach((key, value) -> container.set(key, PersistentDataType.STRING, value));
+            tags.forEach(key -> container.set(key, PersistentDataType.BOOLEAN, true));
+        });
         this.itemStack.addUnsafeEnchantments(this.enchantments);
 
         for (Consumer<ItemStack> consumer : this.onBuildConsumers) {
