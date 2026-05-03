@@ -53,6 +53,18 @@ public class RowBuilder {
         return this;
     }
 
+    /**
+     * Empty packet-only slot. Client sees no item; clicks are dropped at the
+     * network layer. Useful for hiding bottom-inventory cells without touching
+     * the player's real items.
+     */
+    public RowBuilder setEmptyPacketSlot(int x, @Nullable Consumer<InventoryClickEvent> consumer) {
+        if (x > this.slots.length - 1 || x < 0)
+            throw new ArrayIndexOutOfBoundsException(String.format("\"x\" must be from 0-8 not %s", x));
+        this.slots[x] = new Slot(null, consumer, Boolean.TRUE);
+        return this;
+    }
+
     public RowBuilder setSlot(int x, @NotNull ItemStack itemStack, @Nullable Consumer<InventoryClickEvent> consumer, @Nullable Boolean packet) {
         if (x > this.slots.length - 1 || x < 0)
             throw new ArrayIndexOutOfBoundsException(String.format("\"x\" must be from 0-8 not %s", x));

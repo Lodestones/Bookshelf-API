@@ -55,6 +55,27 @@ public class MenuBuilder {
         rowBuilders[row].setPacketSlot(column, itemStack, consumer);
     }
 
+    public void setEmptyPacket(int row, int column, @Nullable Consumer<InventoryClickEvent> consumer) {
+        rowBuilders[row].setEmptyPacketSlot(column, consumer);
+    }
+
+    /**
+     * Hide all 36 bottom-inventory slots from the client without touching the
+     * player's real items. Convenience wrapper over {@link #setEmptyPacket} for
+     * every row/column. Click handlers are not attached; clicks on hidden slots
+     * are dropped at the network layer.
+     */
+    public MenuBuilder hideAll() {
+        for (int y = 0; y < rowBuilders.length; y++) {
+            RowBuilder rb = new RowBuilder();
+            for (int x = 0; x < 9; x++) {
+                rb.setEmptyPacketSlot(x, null);
+            }
+            rowBuilders[y] = rb;
+        }
+        return this;
+    }
+
     public RowBuilder[] getRowBuilders() {
         return rowBuilders;
     }
