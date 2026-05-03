@@ -120,6 +120,15 @@ public class APIMenuManager implements IMenuManager, Listener {
         if (!(humanEntity instanceof Player player)) {
             return;
         }
+        // OPEN_NEW: another Menu.open() already ran register() for the
+        // incoming menu and primed packet state via onOpen(). activeMenus.get()
+        // here returns the NEW menu, so dispatching close actions or packet
+        // cleanup against it would fire the wrong handlers and wipe the new
+        // menu's freshly added pendingOpens/activeWindows entries — the cause
+        // of the second menu rendering as BARRIER placeholders.
+        if (event.getReason().equals(InventoryCloseEvent.Reason.OPEN_NEW)) {
+            return;
+        }
         Menu menu = activeMenus.get(player.getUniqueId());
         if (menu == null) {
             return;
@@ -128,9 +137,7 @@ public class APIMenuManager implements IMenuManager, Listener {
         if (packetMenuHandler != null && menu.getTopMenuBuilder().isPacketBased()) {
             packetMenuHandler.onClose(menu);
         }
-        if (!event.getReason().equals(InventoryCloseEvent.Reason.OPEN_NEW)) {
-            Task.later(this.plugin, () -> activeMenus.remove(player.getUniqueId()), 1L);
-        }
+        Task.later(this.plugin, () -> activeMenus.remove(player.getUniqueId()), 1L);
     }
 
     @EventHandler
