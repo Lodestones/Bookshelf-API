@@ -89,6 +89,12 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>com.velocitypowered</groupId>
+            <artifactId>velocity-api</artifactId>
+            <version>3.4.0-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>net.infumia</groupId>
             <artifactId>title-updater</artifactId>
             <version>0.1.3</version>
