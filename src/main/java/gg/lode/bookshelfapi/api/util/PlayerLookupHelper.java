@@ -45,7 +45,7 @@ public class PlayerLookupHelper {
         try {
             MojangProfile profile = MojangProfile.getMojangProfile(name);
             if (profile != null) return profile.getUniqueId();
-        } catch (IOException | org.json.simple.parser.ParseException e) {
+        } catch (IOException e) {
             // Continue to next fallback
         }
 
@@ -72,7 +72,7 @@ public class PlayerLookupHelper {
         try {
             MojangProfile profile = MojangProfile.getMojangProfileFromUUID(uniqueId.toString());
             if (profile != null) return profile.getName();
-        } catch (IOException | org.json.simple.parser.ParseException e) {
+        } catch (IOException e) {
             // Continue to next fallback
         }
 

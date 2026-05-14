@@ -1,8 +1,7 @@
 package gg.lode.bookshelfapi.api.mojang;
 
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -37,56 +36,29 @@ public class MojangProfile {
         return UUID.fromString(formattedUUID.toString());
     }
 
-    public static MojangProfile getMojangProfile(String username) throws IOException, ParseException {
-        String apiEndpoint = "https://api.mojang.com/users/profiles/minecraft/" + username;
-        URL url = new URL(apiEndpoint);
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-        connection.setRequestMethod("GET");
-        JSONParser parser = new JSONParser();
-
-        MojangProfile mojangProfile = null;
-        int responseCode = connection.getResponseCode();
-        if (responseCode == HttpURLConnection.HTTP_OK) {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-            StringBuilder response = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                response.append(line);
-            }
-            reader.close();
-
-            String jsonResponse = response.toString();
-            JSONObject object = (JSONObject) parser.parse(jsonResponse);
-            mojangProfile = new MojangProfile(object.get("id").toString(), object.get("name").toString());
-            reader.close();
-        }
-
-        return mojangProfile;
+    public static MojangProfile getMojangProfile(String username) throws IOException {
+        return fetch("https://api.mojang.com/users/profiles/minecraft/" + username);
     }
 
-    public static MojangProfile getMojangProfileFromUUID(String uuid) throws IOException, ParseException {
-        String apiEndpoint = "https://sessionserver.mojang.com/session/minecraft/profile/" + uuid.replace("-", "");
+    public static MojangProfile getMojangProfileFromUUID(String uuid) throws IOException {
+        return fetch("https://sessionserver.mojang.com/session/minecraft/profile/" + uuid.replace("-", ""));
+    }
+
+    private static MojangProfile fetch(String apiEndpoint) throws IOException {
         URL url = new URL(apiEndpoint);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestMethod("GET");
-        JSONParser parser = new JSONParser();
-
-        MojangProfile mojangProfile = null;
-        int responseCode = connection.getResponseCode();
-        if (responseCode == HttpURLConnection.HTTP_OK) {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-            StringBuilder response = new StringBuilder();
+        if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) return null;
+        StringBuilder response = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
             String line;
-            while ((line = reader.readLine()) != null) {
-                response.append(line);
-            }
-            reader.close();
-
-            String jsonResponse = response.toString();
-            JSONObject object = (JSONObject) parser.parse(jsonResponse);
-            mojangProfile = new MojangProfile(object.get("id").toString(), object.get("name").toString());
+            while ((line = reader.readLine()) != null) response.append(line);
         }
-
-        return mojangProfile;
+        try {
+            JSONObject object = new JSONObject(response.toString());
+            return new MojangProfile(object.getString("id"), object.getString("name"));
+        } catch (JSONException e) {
+            throw new IOException("Malformed Mojang response: " + e.getMessage(), e);
+        }
     }
 }
