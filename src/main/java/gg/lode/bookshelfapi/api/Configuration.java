@@ -10,6 +10,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -311,7 +313,12 @@ public class Configuration {
         File configFile = new File(plugin.getDataFolder() + File.separator + filePath);
 
         if (!configFile.exists() && loadEmbedded) {
-            plugin.saveResource(filePath, false);
+            try (InputStream in = getClass().getClassLoader().getResourceAsStream(filePath)) {
+                if (in == null) {
+                    throw new IllegalArgumentException("The embedded resource '" + filePath + "' cannot be found");
+                }
+                Files.copy(in, configFile.toPath());
+            }
         }
 
         config.load(configFile);
