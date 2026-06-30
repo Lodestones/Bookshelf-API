@@ -87,7 +87,7 @@ public final class DialogService {
             String base = "io.papermc.paper.registry.data.dialog.";
             Class<?> cDialog = Class.forName("io.papermc.paper.dialog.Dialog");
             Class<?> cFactory = Class.forName("io.papermc.paper.registry.RegistryBuilderFactory");
-            Class<?> cEntryBuilder = Class.forName("io.papermc.paper.registry.data.DialogRegistryEntry$Builder");
+            Class<?> cEntryBuilder = Class.forName("io.papermc.paper.registry.data.dialog.DialogRegistryEntry$Builder");
             Class<?> cBase = Class.forName(base + "DialogBase");
             Class<?> cBaseBuilder = Class.forName(base + "DialogBase$Builder");
             cAfter = Class.forName(base + "DialogBase$DialogAfterAction");
