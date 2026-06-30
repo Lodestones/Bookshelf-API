@@ -128,7 +128,13 @@ public final class DialogService {
             actionStatic = cAction.getMethod("staticAction", ClickEvent.class);
 
             show = Player.class.getMethod("showDialog", cDialogLike);
-            close = Player.class.getMethod("closeDialog");
+            // closeDialog() arrived in adventure 4.24; paper-api 1.21.7 ships 4.23.
+            // Optional — null close just makes clear() a no-op, doesn't kill init.
+            try {
+                close = Player.class.getMethod("closeDialog");
+            } catch (NoSuchMethodException ignored) {
+                close = null;
+            }
 
             ok = true;
         } catch (Throwable t) {
@@ -211,9 +217,9 @@ public final class DialogService {
         }
     }
 
-    /** Clears any open dialog for the player. */
+    /** Clears any open dialog for the player. No-op on adventure < 4.24. */
     public static boolean clear(Player player) {
-        if (!SUPPORTED || player == null) return false;
+        if (!SUPPORTED || player == null || M_CLOSE == null) return false;
         try {
             M_CLOSE.invoke(player);
             return true;
