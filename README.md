@@ -1,4 +1,7 @@
 # Bookshelf API
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 Bookshelf API allows you to hook into the Bookshelf Plugin to access quality of life managers that you can integrate into your plugin.<br>
 
 The Bookshelf API also provides utility classes that you can use such as:
