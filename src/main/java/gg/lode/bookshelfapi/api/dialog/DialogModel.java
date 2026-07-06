@@ -41,13 +41,47 @@ public final class DialogModel {
 
     // ---- body -------------------------------------------------------------
 
-    public sealed interface Body permits TextBody {
+    public sealed interface Body permits TextBody, ComponentBody, ItemBody {
     }
 
     /** A line/paragraph of text. {@code width} in GUI pixels (vanilla default 200). */
     public record TextBody(String text, int width) implements Body {
         public TextBody(String text) {
             this(text, 200);
+        }
+    }
+
+    /**
+     * Pre-built Adventure {@link net.kyori.adventure.text.Component} body —
+     * use when content can't roundtrip through MiniMessage (custom-font glyphs,
+     * inline player heads via the ChatHeadFont resource pack, etc.).
+     */
+    public record ComponentBody(net.kyori.adventure.text.Component component, int width) implements Body {
+        public ComponentBody(net.kyori.adventure.text.Component component) {
+            this(component, 200);
+        }
+    }
+
+    /**
+     * An item rendered inline in the dialog body, with optional descriptive
+     * text shown next to it (vanilla puts the item on the left and the
+     * description on the right).
+     *
+     * @param item            the Bukkit ItemStack to render
+     * @param description     MiniMessage text shown beside the item, or {@code null}
+     * @param showDecorations whether to show stack count/durability bar
+     * @param showTooltip     whether hovering shows the item tooltip
+     * @param width           rendered width in GUI pixels (vanilla default 200)
+     * @param height          rendered height in GUI pixels (vanilla default 16)
+     */
+    public record ItemBody(org.bukkit.inventory.ItemStack item,
+                           @Nullable String description,
+                           boolean showDecorations,
+                           boolean showTooltip,
+                           int width,
+                           int height) implements Body {
+        public ItemBody(org.bukkit.inventory.ItemStack item, @Nullable String description) {
+            this(item, description, true, true, 200, 16);
         }
     }
 

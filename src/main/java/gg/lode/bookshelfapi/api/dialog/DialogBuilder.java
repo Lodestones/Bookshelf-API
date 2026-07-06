@@ -82,6 +82,31 @@ public final class DialogBuilder {
         return this;
     }
 
+    /** Body text from a pre-built Adventure Component (bypasses MiniMessage). */
+    public DialogBuilder body(net.kyori.adventure.text.Component component) {
+        this.body.add(new DialogModel.ComponentBody(component));
+        return this;
+    }
+
+    /** Body text from a pre-built Adventure Component with explicit width. */
+    public DialogBuilder body(net.kyori.adventure.text.Component component, int width) {
+        this.body.add(new DialogModel.ComponentBody(component, width));
+        return this;
+    }
+
+    /** Item body — render an item inline with optional descriptive text. */
+    public DialogBuilder bodyItem(org.bukkit.inventory.ItemStack item, @Nullable String description) {
+        this.body.add(new DialogModel.ItemBody(item, description));
+        return this;
+    }
+
+    /** Item body with explicit size + decoration/tooltip flags. */
+    public DialogBuilder bodyItem(org.bukkit.inventory.ItemStack item, @Nullable String description,
+                                  boolean showDecorations, boolean showTooltip, int width, int height) {
+        this.body.add(new DialogModel.ItemBody(item, description, showDecorations, showTooltip, width, height));
+        return this;
+    }
+
     public DialogBuilder input(DialogModel.Input input) {
         this.inputs.add(input);
         return this;

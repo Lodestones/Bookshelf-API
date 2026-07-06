@@ -12,8 +12,10 @@ import com.github.retrooper.packetevents.protocol.dialog.action.Action;
 import com.github.retrooper.packetevents.protocol.dialog.action.DynamicCustomAction;
 import com.github.retrooper.packetevents.protocol.dialog.action.StaticAction;
 import com.github.retrooper.packetevents.protocol.dialog.body.DialogBody;
+import com.github.retrooper.packetevents.protocol.dialog.body.ItemDialogBody;
 import com.github.retrooper.packetevents.protocol.dialog.body.PlainMessage;
 import com.github.retrooper.packetevents.protocol.dialog.body.PlainMessageDialogBody;
+import io.github.retrooper.packetevents.util.SpigotConversionUtil;
 import com.github.retrooper.packetevents.protocol.dialog.button.ActionButton;
 import com.github.retrooper.packetevents.protocol.dialog.button.CommonButtonData;
 import com.github.retrooper.packetevents.protocol.dialog.input.BooleanInputControl;
@@ -125,6 +127,19 @@ public final class DialogService {
             for (DialogModel.Body b : data.body()) {
                 if (b instanceof DialogModel.TextBody text) {
                     bodies.add(new PlainMessageDialogBody(new PlainMessage(component(text.text()), text.width())));
+                } else if (b instanceof DialogModel.ComponentBody comp) {
+                    bodies.add(new PlainMessageDialogBody(new PlainMessage(comp.component(), comp.width())));
+                } else if (b instanceof DialogModel.ItemBody item) {
+                    PlainMessage description = item.description() != null
+                            ? new PlainMessage(component(item.description()), item.width())
+                            : null;
+                    bodies.add(new ItemDialogBody(
+                            SpigotConversionUtil.fromBukkitItemStack(item.item()),
+                            description,
+                            item.showDecorations(),
+                            item.showTooltip(),
+                            item.width(),
+                            item.height()));
                 }
             }
         }
