@@ -34,10 +34,14 @@ public class PlayerLookupHelper {
      * Resolves a player name to UUID using Mojang API. Returns null if not found or error.
      */
     public static UUID resolvePlayerUUID(String name) {
-        // Try local cache first
+        // Try local cache first, but only trust a real, previously-seen profile.
+        // For a name that was recently changed away from, Bukkit.getOfflinePlayer(name)
+        // fabricates an offline-mode UUID (getName() != null, UUID != zero) that would
+        // shadow the DB name-history fallback below. hasPlayedBefore() weeds those out.
         OfflinePlayer offline = Bukkit.getOfflinePlayer(name);
         UUID uuid = offline.getUniqueId();
-        if (offline.getName() != null && !uuid.equals(new UUID(0, 0))) {
+        if ((offline.isOnline() || offline.hasPlayedBefore())
+                && offline.getName() != null && !uuid.equals(new UUID(0, 0))) {
             return uuid;
         }
 

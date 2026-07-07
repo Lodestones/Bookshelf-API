@@ -10,6 +10,14 @@ import java.util.stream.Collectors;
 public class PlaceholderAPICompat {
 
 
+    /**
+     * Resolves placeholders in a single string. Returns the input unchanged when
+     * PlaceholderAPI is not installed or resolution fails.
+     */
+    public static String setPlaceholders(Player player, String line) {
+        return setPlaceholders(player, List.of(line)).get(0);
+    }
+
     public static List<String> setPlaceholders(Player player, List<String> lines) {
         try {
             Class<?> papi = Class.forName("me.clip.placeholderapi.PlaceholderAPI");
