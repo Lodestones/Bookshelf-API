@@ -313,11 +313,22 @@ public class Configuration {
         File configFile = new File(plugin.getDataFolder() + File.separator + filePath);
 
         if (!configFile.exists() && loadEmbedded) {
-            try (InputStream in = getClass().getClassLoader().getResourceAsStream(filePath)) {
-                if (in == null) {
-                    throw new IllegalArgumentException("The embedded resource '" + filePath + "' cannot be found");
+            // Resolve against the plugin's own classloader first: under a cloud
+            // loader the Configuration class lives in the loader jar while the
+            // embedded defaults live in the impl blob's classloader.
+            InputStream in = plugin.getClass().getClassLoader().getResourceAsStream(filePath);
+            if (in == null) {
+                in = getClass().getClassLoader().getResourceAsStream(filePath);
+            }
+            if (in == null) {
+                throw new IllegalArgumentException("The embedded resource '" + filePath + "' cannot be found");
+            }
+            try (InputStream stream = in) {
+                File parent = configFile.getParentFile();
+                if (parent != null && !parent.exists() && !parent.mkdirs()) {
+                    throw new IOException("Could not create directory " + parent);
                 }
-                Files.copy(in, configFile.toPath());
+                Files.copy(stream, configFile.toPath());
             }
         }
 
