@@ -62,9 +62,18 @@ public class PlayerLookupHelper {
     }
 
     /**
-     * Resolves a player name to UUID using Mojang API. Returns null if not found or error.
+     * Resolves a UUID to a player name. Returns null if not found or on error.
+     *
+     * @param uniqueId the player's UUID. A null is treated as "unknown" and
+     *                 answered with null, rather than passed through to
+     *                 {@link Bukkit#getOfflinePlayer(UUID)}, which throws on
+     *                 null. Callers reading UUIDs out of storage cannot always
+     *                 guarantee one is present, and a missing name should not
+     *                 take down the command asking for it.
      */
     public static String resolvePlayerName(UUID uniqueId) {
+        if (uniqueId == null) return null;
+
         // Try local cache first
         OfflinePlayer offline = Bukkit.getOfflinePlayer(uniqueId);
         UUID uuid = offline.getUniqueId();
