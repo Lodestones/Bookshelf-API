@@ -48,6 +48,16 @@ public class ItemBuilder {
     private PotionData potionData;
     private Color potionColor;
     private String base64Skull;
+
+    /**
+     * A copied head's own profile, kept whole.
+     *
+     * <p>Separate from {@link #skullPlayer}, which is a head this builder was <em>asked</em> for. An
+     * OfflinePlayer is a uuid and a name and nothing else, so rebuilding a profile from one loses any
+     * texture that was not the player's own skin — which is every custom head, since those carry a
+     * texture the profile's owner never wore.
+     */
+    private PlayerProfile skullProfile;
     private ItemFlag[] flags = new ItemFlag[0];
     private boolean isUnbreakable = false;
     private String leatherColor;
@@ -67,6 +77,7 @@ public class ItemBuilder {
         this.material = material;
         this.skullPlayer = null;
         this.base64Skull = null;
+        this.skullProfile = null;
         this.potionColor = Color.WHITE;
         this.leatherColor = "#A06540";
     }
@@ -76,6 +87,7 @@ public class ItemBuilder {
         this.itemStack = itemStack;
         this.skullPlayer = null;
         this.base64Skull = null;
+        this.skullProfile = null;
         this.amount = itemStack.getAmount();
         ItemMeta meta = itemStack.getItemMeta();
         assert meta != null;
@@ -105,7 +117,10 @@ public class ItemBuilder {
         }
         itemMeta1 = itemStack.getItemMeta();
         if (itemMeta1 instanceof SkullMeta skullMeta) {
-            this.skullPlayer = skullMeta.getOwningPlayer();
+            // The whole profile, not its owner. getOwningPlayer() throws the texture away, and
+            // build() then rebuilt a bare profile from the uuid and name — which turned every custom
+            // head copied through this builder into a blank default skin.
+            this.skullProfile = skullMeta.getOwnerProfile();
         }
         // copy enchantments
         if (!meta.getEnchants().isEmpty()) {
@@ -136,6 +151,7 @@ public class ItemBuilder {
         this.itemStack = itemStack;
         this.skullPlayer = null;
         this.base64Skull = null;
+        this.skullProfile = null;
         this.amount = itemStack.getAmount();
         ItemMeta meta = itemStack.getItemMeta();
         assert meta != null;
@@ -165,7 +181,10 @@ public class ItemBuilder {
         }
         itemMeta1 = itemStack.getItemMeta();
         if (itemMeta1 instanceof SkullMeta skullMeta) {
-            this.skullPlayer = skullMeta.getOwningPlayer();
+            // The whole profile, not its owner. getOwningPlayer() throws the texture away, and
+            // build() then rebuilt a bare profile from the uuid and name — which turned every custom
+            // head copied through this builder into a blank default skin.
+            this.skullProfile = skullMeta.getOwnerProfile();
         }
         // copy enchantments
         if (!meta.getEnchants().isEmpty()) {
@@ -377,11 +396,14 @@ public class ItemBuilder {
         } else {
             this.skullPlayer = getOfflinePlayer(player.getName());
         }
+        // An asked-for head replaces whatever the copied stack was wearing.
+        this.skullProfile = null;
         return this;
     }
 
     public ItemBuilder skull(OfflinePlayer player) {
         this.skullPlayer = player;
+        this.skullProfile = null;
         return this;
     }
 
@@ -397,6 +419,7 @@ public class ItemBuilder {
      */
     public ItemBuilder skull(String base64) {
         this.base64Skull = base64;
+        this.skullProfile = null;
         return this;
     }
 
@@ -477,6 +500,9 @@ public class ItemBuilder {
                         this.skullPlayer.getUniqueId(),
                         this.skullPlayer.getName());
                 skullMeta.setOwnerProfile(profile);
+            } else if (this.skullProfile != null) {
+                // Put back exactly what was copied, texture and all.
+                skullMeta.setOwnerProfile(this.skullProfile);
             }
         }
 
