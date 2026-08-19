@@ -3,8 +3,10 @@ package gg.lode.bookshelfapi.api;
 import org.bukkit.event.Listener;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 
 public class PremiumManager implements Listener {
     private final static String LICENSE_URL = "https://lode.gg/api/license/verify";
@@ -15,44 +17,55 @@ public class PremiumManager implements Listener {
         this(id, port);
     }
 
+    /**
+     * Identify this server by the per-buyer licence key its loader stamped in.
+     *
+     * <p>The public-address lookup this replaced needed a third-party service
+     * to discover the address and then matched on it, so every buyer whose host
+     * reassigns addresses between sessions looked like an unregistered server.
+     * Worse, a failure to reach that service was itself read as "unlicensed".
+     *
+     * <p>Only a definitive answer counts against a server now. No key to
+     * present, lode.gg unreachable, or a server error are all "cannot say",
+     * which reports licensed — entitlement is settled before a premium plugin's
+     * code reaches the server at all.
+     */
     public PremiumManager(String id, int port) {
-        boolean isLicensedServer;
-
-        try {
-            URL url = new URL("https://api.ipify.org");
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("GET");
-            conn.setRequestProperty("User-Agent", "Mozilla/5.0");
-            String ip = new String(conn.getInputStream().readAllBytes());
+        String key = stampedLicenseKey();
+        boolean licensed = true;
+        if (key != null) {
+            HttpURLConnection conn = null;
             try {
-                isLicensedServer = checkStatus(LICENSE_URL + String.format("?ip=%s&id=%s&port=%s", ip, id, port));
-            } catch (Exception e) {
-                isLicensedServer = true;
+                @SuppressWarnings("deprecation")
+                URL url = new URL(LICENSE_URL + "?id=" + id);
+                conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("GET");
+                conn.setRequestProperty("X-License-Key", key);
+                conn.setConnectTimeout(5000);
+                conn.setReadTimeout(5000);
+                int code = conn.getResponseCode();
+                if (code >= 400 && code < 500) licensed = false;
+            } catch (Exception cannotSay) {
+                licensed = true;
+            } finally {
+                if (conn != null) conn.disconnect();
             }
-        } catch (Exception ignored) {
-            isLicensedServer = false;
         }
+        this.isLicensedServer = licensed;
+    }
 
-        this.isLicensedServer = isLicensedServer;
+    /** The licence key the loader stamped into this jar, or null. */
+    private static String stampedLicenseKey() {
+        try (InputStream in = PremiumManager.class.getResourceAsStream("/cloud/license.key")) {
+            if (in == null) return null;
+            String key = new String(in.readAllBytes(), StandardCharsets.UTF_8).trim();
+            return key.isEmpty() ? null : key;
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     public boolean isLicensedServer() {
         return isLicensedServer;
     }
-
-    @SuppressWarnings("deprecation")
-    private boolean checkStatus(String urlString) {
-        try {
-            URL url = new URL(urlString);
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("GET");
-            int responseCode = conn.getResponseCode();
-
-            return responseCode == HttpURLConnection.HTTP_OK;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
 }

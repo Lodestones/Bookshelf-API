@@ -36,34 +36,46 @@ public final class SignedLicenseVerifier {
 
     private SignedLicenseVerifier() {}
 
-    @SuppressWarnings("deprecation")
+    /** The licence key the loader stamped into this jar, or null. */
+    private static String stampedLicenseKey() {
+        try (InputStream in = SignedLicenseVerifier.class.getResourceAsStream("/cloud/license.key")) {
+            if (in == null) return null;
+            String key = new String(in.readAllBytes(), StandardCharsets.UTF_8).trim();
+            return key.isEmpty() ? null : key;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /**
+     * Verify entitlement, identifying this server by its per-buyer licence key.
+     *
+     * <p>No address is sent and none is looked up. The nonce and expiry still
+     * make the signed response unreplayable and the signature still covers
+     * every field; only the address matching is gone, because it answered "no"
+     * for buyers on hosts that reassign addresses between sessions.
+     *
+     * <p>Unreachable, a server error, or no key to present is not a verdict.
+     */
     public static boolean verify(String pluginId, int port, String publicKeyB64) {
-        HttpURLConnection ipConn = null;
+        String key = stampedLicenseKey();
+        if (key == null) return true;
         HttpURLConnection verifyConn = null;
         try {
-            URL ipUrl = new URL("https://api.ipify.org");
-            ipConn = (HttpURLConnection) ipUrl.openConnection();
-            ipConn.setRequestMethod("GET");
-            ipConn.setRequestProperty("User-Agent", "Mozilla/5.0");
-            ipConn.setConnectTimeout(5000);
-            ipConn.setReadTimeout(5000);
-            String ip;
-            try (InputStream is = ipConn.getInputStream()) {
-                ip = new String(is.readAllBytes(), StandardCharsets.UTF_8).trim();
-            }
-
             byte[] nonceBytes = new byte[16];
             new SecureRandom().nextBytes(nonceBytes);
             String nonce = HexFormat.of().formatHex(nonceBytes);
 
-            URL verifyUrl = new URL(String.format(
-                    "https://lode.gg/api/license/verify?ip=%s&id=%s&port=%s&nonce=%s",
-                    ip, pluginId, port, nonce));
+            @SuppressWarnings("deprecation")
+            URL verifyUrl = new URL("https://lode.gg/api/license/verify?id=" + pluginId
+                    + "&nonce=" + nonce);
             verifyConn = (HttpURLConnection) verifyUrl.openConnection();
             verifyConn.setRequestMethod("GET");
+            verifyConn.setRequestProperty("X-License-Key", key);
             verifyConn.setConnectTimeout(5000);
             verifyConn.setReadTimeout(5000);
             int code = verifyConn.getResponseCode();
+            if (code >= 500) return true;
             String body;
             try (InputStream is = code == HttpURLConnection.HTTP_OK
                     ? verifyConn.getInputStream() : verifyConn.getErrorStream()) {
@@ -79,23 +91,21 @@ public final class SignedLicenseVerifier {
             JSONObject payload = json.optJSONObject("payload");
             String signature = json.optString("signature", "");
             if (payload == null || signature.isEmpty()) return false;
-
             if (!pluginId.equals(payload.optString("pluginId"))) return false;
-            if (!ip.equals(payload.optString("ip"))) return false;
-            if (!String.valueOf(port).equals(payload.optString("port"))) return false;
             if (!nonce.equals(payload.optString("nonce"))) return false;
             long expiresAt = payload.optLong("expiresAt", 0L);
             if (expiresAt <= System.currentTimeMillis()) return false;
             boolean valid = payload.optBoolean("valid", false);
             if (!valid) return false;
 
-            String canonical = pluginId + "|" + ip + "|" + port + "|" + nonce + "|"
-                    + expiresAt + "|" + valid;
+            // The address fields come back empty; they stay in the canonical
+            // message because the signature covers them.
+            String canonical = pluginId + "|" + payload.optString("ip") + "|"
+                    + payload.optString("port") + "|" + nonce + "|" + expiresAt + "|" + valid;
             return verifyEd25519(canonical, signature, publicKeyB64);
         } catch (Exception e) {
-            return false;
+            return true;
         } finally {
-            if (ipConn != null) ipConn.disconnect();
             if (verifyConn != null) verifyConn.disconnect();
         }
     }
