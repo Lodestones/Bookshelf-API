@@ -12,15 +12,29 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * A utility class that can retrieve a {@link YamlConfiguration} file.
  * If provided, it can also generate the {@link YamlConfiguration} compiled inside the current jar.
+ *
+ * YAML serialisation is expensive on large files (e.g. 2.3MB files with 11k keys).
+ * To avoid main-thread stalls, saves are performed asynchronously on a background
+ * executor. Snapshots of the config values are taken before async serialisation
+ * to avoid thread-safety issues with YamlConfiguration (which is not thread-safe).
  *
  * @author John Aquino
  */
@@ -29,6 +43,15 @@ public class Configuration {
     protected YamlConfiguration config;
     protected final String filePath;
     private final AtomicBoolean dirty = new AtomicBoolean(false);
+    /**
+     * Shared by every configuration, because a thread per file would be one per config a plugin
+     * owns. Single-threaded as well as shared, so two saves can never interleave on disk.
+     */
+    private static final ExecutorService SAVES = Executors.newSingleThreadExecutor(runnable -> {
+        Thread thread = new Thread(runnable, "Bookshelf-Config-Saver");
+        thread.setDaemon(true);
+        return thread;
+    });
 
     public Configuration(JavaPlugin plugin, String filePath) {
         this.plugin = plugin;
@@ -69,14 +92,16 @@ public class Configuration {
         set(path.toString(), value);
     }
 
+    /**
+     * Saves the configuration to disk asynchronously. Serialisation happens off the
+     * main thread to avoid blocking on large YAML files.
+     *
+     * This method is non-blocking. Use {@link #flush(long)} at shutdown to await pending writes.
+     */
     public void save() {
-        try {
-            dirty.set(false);
-            File configFile = new File(plugin.getDataFolder() + File.separator + filePath);
-            this.config.save(configFile);
-        } catch (Exception err) {
-            err.printStackTrace();
-        }
+        dirty.set(false);
+        File configFile = new File(plugin.getDataFolder() + File.separator + filePath);
+        submitSave(configFile);
     }
 
     /**
@@ -89,20 +114,121 @@ public class Configuration {
 
     /**
      * Saves the configuration to disk only if it has been marked dirty.
+     * Serialisation happens asynchronously to avoid blocking the main thread.
      *
-     * @return true if a save was performed, false if the configuration was clean.
+     * @return true if a save was initiated, false if the configuration was clean.
      */
     public boolean saveIfDirty() {
         if (dirty.compareAndSet(true, false)) {
-            try {
-                File configFile = new File(plugin.getDataFolder() + File.separator + filePath);
-                this.config.save(configFile);
-            } catch (Exception err) {
-                err.printStackTrace();
-            }
+            submitSave(new File(plugin.getDataFolder() + File.separator + filePath));
             return true;
         }
         return false;
+    }
+
+    /**
+     * Flushes and awaits all pending configuration writes. Call this during shutdown
+     * to ensure data is not lost.
+     *
+     * @param timeoutSeconds timeout in seconds to wait for pending writes
+     * @return true if all writes completed, false if timeout was exceeded
+     */
+    public boolean flush(long timeoutSeconds) {
+        // A barrier rather than a shutdown: the queue is shared and a configuration saved during
+        // disable is ordinary, so shutting the executor down here would reject every save that came
+        // after the first plugin to flush.
+        try {
+            SAVES.submit(() -> {}).get(timeoutSeconds, TimeUnit.SECONDS);
+            return true;
+        } catch (InterruptedException interrupted) {
+            Thread.currentThread().interrupt();
+            return false;
+        } catch (ExecutionException | TimeoutException | RejectedExecutionException failed) {
+            return false;
+        }
+    }
+
+    /** Snapshots on the calling thread, then serialises and writes on the shared one. */
+    private void submitSave(File configFile) {
+        Map<String, Object> snapshot = snapshot();
+        try {
+            SAVES.submit(() -> saveSnapshot(snapshot, configFile));
+        } catch (RejectedExecutionException shuttingDown) {
+            // Nothing is going to run it, so write it here rather than lose it.
+            saveSnapshot(snapshot, configFile);
+        }
+    }
+
+    /**
+     * Takes a deep snapshot of the config values into plain nested LinkedHashMaps.
+     * This allows the snapshot to be safely passed to a background executor without
+     * risk of ConcurrentModificationException from the main thread mutating the config.
+     */
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> snapshot() {
+        Map<String, Object> result = new LinkedHashMap<>();
+        for (String key : config.getKeys(false)) {
+            Object value = config.get(key);
+            result.put(key, deepCopy(value));
+        }
+        return result;
+    }
+
+    /**
+     * Recursively copies a value, converting ConfigurationSections to LinkedHashMaps
+     * and Lists to ArrayList to ensure the snapshot is mutable and independent.
+     */
+    @SuppressWarnings("unchecked")
+    private Object deepCopy(Object value) {
+        if (value instanceof ConfigurationSection section) {
+            Map<String, Object> copy = new LinkedHashMap<>();
+            for (String key : section.getKeys(false)) {
+                copy.put(key, deepCopy(section.get(key)));
+            }
+            return copy;
+        } else if (value instanceof Map<?, ?> map) {
+            Map<String, Object> copy = new LinkedHashMap<>();
+            for (Object k : map.keySet()) {
+                copy.put(k.toString(), deepCopy(map.get(k)));
+            }
+            return copy;
+        } else if (value instanceof List<?> list) {
+            // Every element too: a list of maps is ordinary in a config, and copying only the list
+            // leaves those maps shared with the live configuration for the main thread to mutate
+            // while this one is being written.
+            List<Object> copy = new ArrayList<>(list.size());
+            for (Object element : list) copy.add(deepCopy(element));
+            return copy;
+        } else {
+            return value;
+        }
+    }
+
+    /**
+     * Writes a snapshot to disk atomically by writing to a temp file and then moving it.
+     * Runs on the background executor to avoid blocking the main thread.
+     */
+    private void saveSnapshot(Map<String, Object> snapshot, File configFile) {
+        try {
+            if (configFile.getParentFile() != null && !configFile.getParentFile().exists()) {
+                configFile.getParentFile().mkdirs();
+            }
+
+            YamlConfiguration newConfig = new YamlConfiguration();
+            for (Map.Entry<String, Object> entry : snapshot.entrySet()) {
+                newConfig.set(entry.getKey(), entry.getValue());
+            }
+
+            // Written beside the real file and moved over it, so a crash partway through leaves the
+            // previous save intact rather than a half-written one. This is player data on a server
+            // that is being hard-killed.
+            File tempFile = new File(configFile.getAbsolutePath() + ".tmp");
+            newConfig.save(tempFile);
+
+            Files.move(tempFile.toPath(), configFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        } catch (Exception err) {
+            err.printStackTrace();
+        }
     }
 
     public @NotNull Set<String> getKeys(boolean deep) {
