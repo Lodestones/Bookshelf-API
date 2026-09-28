@@ -1,6 +1,7 @@
 package gg.lode.bookshelfapi.api.util;
 
 import org.bukkit.Bukkit;
+import org.bukkit.EntityEffect;
 import org.bukkit.GameMode;
 import org.bukkit.GameRule;
 import org.bukkit.Material;
@@ -218,6 +219,11 @@ public final class TrueDamageHelper {
         target.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 900, 1));
         target.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION, 100, 1));
         target.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, 800, 0));
+
+        // The gold burst and the horn. Both are client-side reactions to the entity status vanilla
+        // sends when it resurrects, and nothing above sends one, so a totem popped through here
+        // saved the player in silence: one heart left, an item gone, and no sign of why.
+        target.playEffect(EntityEffect.TOTEM_RESURRECT);
 
         return true;
     }
