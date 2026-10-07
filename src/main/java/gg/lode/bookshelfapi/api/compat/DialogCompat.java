@@ -86,6 +86,8 @@ public final class DialogCompat {
     private static final Method M_RANGE_FORMAT;     // NumberRangeDialogInput.Builder.labelFormat(String)
     private static final Method M_RANGE_BUILD;      // NumberRangeDialogInput.Builder.build()
     private static final Method M_BASE_ESCAPE;      // DialogBase.Builder.canCloseWithEscape(boolean)
+    private static final Method M_MULTI_EXIT;       // MultiActionType.Builder.exitAction(ActionButton)
+    private static final Method M_BUTTON_WIDTH;     // ActionButton.Builder.width(int)
 
     static {
         boolean ok = false;
@@ -216,7 +218,7 @@ public final class DialogCompat {
         M_SHOW_DIALOG = showDialog;
 
         Method boolInitial = null, inputRange = null, rangeStep = null, rangeInitial = null;
-        Method rangeFormat = null, rangeBuild = null, baseEscape = null;
+        Method rangeFormat = null, rangeBuild = null, baseEscape = null, multiExit = null, buttonWidth = null;
         try {
             Class<?> cBoolBuilder = Class.forName("io.papermc.paper.registry.data.dialog.input.BooleanDialogInput$Builder");
             Class<?> cRangeBuilder = Class.forName("io.papermc.paper.registry.data.dialog.input.NumberRangeDialogInput$Builder");
@@ -229,6 +231,9 @@ public final class DialogCompat {
             rangeFormat = cRangeBuilder.getMethod("labelFormat", String.class);
             rangeBuild = cRangeBuilder.getMethod("build");
             baseEscape = cBaseBuilder.getMethod("canCloseWithEscape", boolean.class);
+            buttonWidth = Class.forName("io.papermc.paper.registry.data.dialog.ActionButton$Builder").getMethod("width", int.class);
+            multiExit = Class.forName("io.papermc.paper.registry.data.dialog.type.MultiActionType$Builder")
+                    .getMethod("exitAction", Class.forName("io.papermc.paper.registry.data.dialog.ActionButton"));
         } catch (Throwable ignored) {
             // Leaves sliders, checkbox defaults and the escape option unavailable, nothing else.
         }
@@ -239,6 +244,8 @@ public final class DialogCompat {
         M_RANGE_FORMAT = rangeFormat;
         M_RANGE_BUILD = rangeBuild;
         M_BASE_ESCAPE = baseEscape;
+        M_MULTI_EXIT = multiExit;
+        M_BUTTON_WIDTH = buttonWidth;
     }
 
     // ------------------------------------------------------------------
@@ -295,6 +302,17 @@ public final class DialogCompat {
     public static boolean multiAction(Player player, String title, @Nullable List<String> body,
                                       @Nullable List<Input> inputs, List<Button> buttons,
                                       int columns, boolean canCloseWithEscape) {
+        return multiAction(player, title, body, inputs, buttons, null, columns, canCloseWithEscape);
+    }
+
+    /**
+     * Multi-button dialog with an exit button. The exit button sits on its own at the bottom, and
+     * the game also runs it when the player presses Escape, with whatever they entered. So it's
+     * the right place for a "save and close": closing the screen either way keeps the changes.
+     */
+    public static boolean multiAction(Player player, String title, @Nullable List<String> body,
+                                      @Nullable List<Input> inputs, List<Button> buttons, @Nullable Button exit,
+                                      int columns, boolean canCloseWithEscape) {
         if (!SUPPORTED || player == null || buttons == null || buttons.isEmpty()) return false;
         try {
             Object base = buildBase(title, body, inputs, canCloseWithEscape);
@@ -302,6 +320,7 @@ public final class DialogCompat {
             for (Button b : buttons) actionButtons.add(buildActionButton(b));
             Object multiBuilder = M_TYPE_MULTI.invoke(null, actionButtons);
             multiBuilder = M_MULTI_COLUMNS.invoke(multiBuilder, Math.max(1, columns));
+            if (exit != null && M_MULTI_EXIT != null) multiBuilder = M_MULTI_EXIT.invoke(multiBuilder, buildActionButton(exit));
             Object type = M_MULTI_BUILD.invoke(multiBuilder);
             return show(player, buildDialog(base, type));
         } catch (Throwable t) {
@@ -400,6 +419,9 @@ public final class DialogCompat {
         Object builder = M_BUTTON_BUILDER.invoke(null, button.component != null ? button.component : mm(button.label));
         if (button.tooltip != null) {
             builder = M_BUTTON_TOOLTIP.invoke(builder, mm(button.tooltip));
+        }
+        if (button.width > 0 && M_BUTTON_WIDTH != null) {
+            builder = M_BUTTON_WIDTH.invoke(builder, button.width);
         }
         builder = M_BUTTON_ACTION.invoke(builder, action);
         return M_BUTTON_BUILD.invoke(builder);
@@ -578,6 +600,7 @@ public final class DialogCompat {
         final String tooltip;
         final Handler handler;
         Component component;
+        int width;
 
         private Button(String label, @Nullable String tooltip, Handler handler) {
             this.label = label;
@@ -593,6 +616,12 @@ public final class DialogCompat {
             Button button = new Button("", tooltip, handler);
             button.component = label;
             return button;
+        }
+
+        /** Sets the button's width in pixels, 1 to 1024. The game's default is 150. */
+        public Button width(int width) {
+            this.width = Math.max(1, Math.min(1024, width));
+            return this;
         }
 
         public static Button of(String label, Handler handler) {
