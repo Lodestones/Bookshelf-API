@@ -288,6 +288,27 @@ public final class DialogCompat {
         }
     }
 
+    /**
+     * Multi-button dialog with inputs, in a set number of columns. When {@code canCloseWithEscape}
+     * is true, Escape closes it without running any button's handler.
+     */
+    public static boolean multiAction(Player player, String title, @Nullable List<String> body,
+                                      @Nullable List<Input> inputs, List<Button> buttons,
+                                      int columns, boolean canCloseWithEscape) {
+        if (!SUPPORTED || player == null || buttons == null || buttons.isEmpty()) return false;
+        try {
+            Object base = buildBase(title, body, inputs, canCloseWithEscape);
+            List<Object> actionButtons = new ArrayList<>(buttons.size());
+            for (Button b : buttons) actionButtons.add(buildActionButton(b));
+            Object multiBuilder = M_TYPE_MULTI.invoke(null, actionButtons);
+            multiBuilder = M_MULTI_COLUMNS.invoke(multiBuilder, Math.max(1, columns));
+            Object type = M_MULTI_BUILD.invoke(multiBuilder);
+            return show(player, buildDialog(base, type));
+        } catch (Throwable t) {
+            return false;
+        }
+    }
+
     /** Two-button yes/no dialog. */
     public static boolean confirmation(Player player, String title, List<String> body, Button yes, Button no) {
         if (!SUPPORTED || player == null) return false;
@@ -376,7 +397,7 @@ public final class DialogCompat {
                 new Class[]{C_ACTION_CALLBACK},
                 new CallbackHandler(button.handler));
         Object action = M_ACTION_CUSTOMCLICK.invoke(null, proxy, CLICK_OPTIONS);
-        Object builder = M_BUTTON_BUILDER.invoke(null, mm(button.label));
+        Object builder = M_BUTTON_BUILDER.invoke(null, button.component != null ? button.component : mm(button.label));
         if (button.tooltip != null) {
             builder = M_BUTTON_TOOLTIP.invoke(builder, mm(button.tooltip));
         }
@@ -556,11 +577,22 @@ public final class DialogCompat {
         final String label;
         final String tooltip;
         final Handler handler;
+        Component component;
 
         private Button(String label, @Nullable String tooltip, Handler handler) {
             this.label = label;
             this.tooltip = tooltip;
             this.handler = handler;
+        }
+
+        /**
+         * A button whose label is a ready-made component rather than MiniMessage, for labels
+         * MiniMessage can't express, such as a head with a custom skin.
+         */
+        public static Button of(Component label, @Nullable String tooltip, Handler handler) {
+            Button button = new Button("", tooltip, handler);
+            button.component = label;
+            return button;
         }
 
         public static Button of(String label, Handler handler) {
