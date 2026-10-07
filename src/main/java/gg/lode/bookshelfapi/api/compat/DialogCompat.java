@@ -78,6 +78,15 @@ public final class DialogCompat {
 
     private static final Method M_SHOW_DIALOG;      // Audience.showDialog(DialogLike)
 
+    // Resolved on their own, so a server missing one of these still gets every other dialog.
+    private static final Method M_BOOL_INITIAL;     // BooleanDialogInput.Builder.initial(boolean)
+    private static final Method M_INPUT_RANGE;      // DialogInput.numberRange(String, Component, float, float)
+    private static final Method M_RANGE_STEP;       // NumberRangeDialogInput.Builder.step(Float)
+    private static final Method M_RANGE_INITIAL;    // NumberRangeDialogInput.Builder.initial(Float)
+    private static final Method M_RANGE_FORMAT;     // NumberRangeDialogInput.Builder.labelFormat(String)
+    private static final Method M_RANGE_BUILD;      // NumberRangeDialogInput.Builder.build()
+    private static final Method M_BASE_ESCAPE;      // DialogBase.Builder.canCloseWithEscape(boolean)
+
     static {
         boolean ok = false;
         Method dialogCreate = null, viewText = null, viewBool = null, viewFloat = null;
@@ -205,6 +214,31 @@ public final class DialogCompat {
         M_OPTIONS_BUILDER = optionsBuilder;
         CLICK_OPTIONS = clickOptions;
         M_SHOW_DIALOG = showDialog;
+
+        Method boolInitial = null, inputRange = null, rangeStep = null, rangeInitial = null;
+        Method rangeFormat = null, rangeBuild = null, baseEscape = null;
+        try {
+            Class<?> cBoolBuilder = Class.forName("io.papermc.paper.registry.data.dialog.input.BooleanDialogInput$Builder");
+            Class<?> cRangeBuilder = Class.forName("io.papermc.paper.registry.data.dialog.input.NumberRangeDialogInput$Builder");
+            Class<?> cInput = Class.forName("io.papermc.paper.registry.data.dialog.input.DialogInput");
+            Class<?> cBaseBuilder = Class.forName("io.papermc.paper.registry.data.dialog.DialogBase$Builder");
+            boolInitial = cBoolBuilder.getMethod("initial", boolean.class);
+            inputRange = cInput.getMethod("numberRange", String.class, Component.class, float.class, float.class);
+            rangeStep = cRangeBuilder.getMethod("step", Float.class);
+            rangeInitial = cRangeBuilder.getMethod("initial", Float.class);
+            rangeFormat = cRangeBuilder.getMethod("labelFormat", String.class);
+            rangeBuild = cRangeBuilder.getMethod("build");
+            baseEscape = cBaseBuilder.getMethod("canCloseWithEscape", boolean.class);
+        } catch (Throwable ignored) {
+            // Leaves sliders, checkbox defaults and the escape option unavailable, nothing else.
+        }
+        M_BOOL_INITIAL = boolInitial;
+        M_INPUT_RANGE = inputRange;
+        M_RANGE_STEP = rangeStep;
+        M_RANGE_INITIAL = rangeInitial;
+        M_RANGE_FORMAT = rangeFormat;
+        M_RANGE_BUILD = rangeBuild;
+        M_BASE_ESCAPE = baseEscape;
     }
 
     // ------------------------------------------------------------------
@@ -229,6 +263,25 @@ public final class DialogCompat {
             Object type = button == null
                     ? M_TYPE_NOTICE0.invoke(null)
                     : M_TYPE_NOTICE1.invoke(null, buildActionButton(button));
+            return show(player, buildDialog(base, type));
+        } catch (Throwable t) {
+            return false;
+        }
+    }
+
+    /**
+     * Single-button dialog with input fields, for forms like a settings screen. The button's
+     * handler receives what was entered. When {@code canCloseWithEscape} is true, Escape closes
+     * the dialog without running the handler, so nothing entered is applied.
+     *
+     * @return {@code true} if shown, {@code false} when unsupported
+     */
+    public static boolean notice(Player player, String title, @Nullable List<String> body,
+                                 @Nullable List<Input> inputs, Button button, boolean canCloseWithEscape) {
+        if (!SUPPORTED || player == null || button == null) return false;
+        try {
+            Object base = buildBase(title, body, inputs, canCloseWithEscape);
+            Object type = M_TYPE_NOTICE1.invoke(null, buildActionButton(button));
             return show(player, buildDialog(base, type));
         } catch (Throwable t) {
             return false;
@@ -269,7 +322,15 @@ public final class DialogCompat {
     // ------------------------------------------------------------------
 
     private static Object buildBase(String title, @Nullable List<String> body, @Nullable List<Input> inputs) throws Exception {
+        return buildBase(title, body, inputs, null);
+    }
+
+    private static Object buildBase(String title, @Nullable List<String> body, @Nullable List<Input> inputs,
+                                    @Nullable Boolean canCloseWithEscape) throws Exception {
         Object builder = M_BASE_BUILDER.invoke(null, mm(title));
+        if (canCloseWithEscape != null && M_BASE_ESCAPE != null) {
+            builder = M_BASE_ESCAPE.invoke(builder, canCloseWithEscape);
+        }
         if (body != null && !body.isEmpty()) {
             List<Object> bodies = new ArrayList<>(body.size());
             for (String line : body) bodies.add(M_BODY_PLAIN.invoke(null, mm(line)));
@@ -286,7 +347,18 @@ public final class DialogCompat {
     private static Object buildInput(Input input) throws Exception {
         if (input.type == Input.Type.BOOL) {
             Object b = M_INPUT_BOOL.invoke(null, input.key, mm(input.label));
+            if (input.boolInitial != null && M_BOOL_INITIAL != null) {
+                b = M_BOOL_INITIAL.invoke(b, input.boolInitial.booleanValue());
+            }
             return M_BOOL_BUILD.invoke(b);
+        }
+        if (input.type == Input.Type.RANGE) {
+            if (M_INPUT_RANGE == null) throw new IllegalStateException("Sliders are not supported on this server");
+            Object b = M_INPUT_RANGE.invoke(null, input.key, mm(input.label), input.start, input.end);
+            if (input.step != null) b = M_RANGE_STEP.invoke(b, input.step);
+            if (input.rangeInitial != null) b = M_RANGE_INITIAL.invoke(b, input.rangeInitial);
+            if (input.labelFormat != null) b = M_RANGE_FORMAT.invoke(b, input.labelFormat);
+            return M_RANGE_BUILD.invoke(b);
         }
         Object b = M_INPUT_TEXT.invoke(null, input.key, mm(input.label));
         if (input.maxLength > 0) {
@@ -410,13 +482,19 @@ public final class DialogCompat {
 
     /** An input field declaration. */
     public static final class Input {
-        enum Type { TEXT, BOOL }
+        enum Type { TEXT, BOOL, RANGE }
 
         final Type type;
         final String key;
         final String label;
         final String initial;
         final int maxLength;
+        Boolean boolInitial;
+        float start;
+        float end;
+        Float step;
+        Float rangeInitial;
+        String labelFormat;
 
         private Input(Type type, String key, String label, String initial, int maxLength) {
             this.type = type;
@@ -436,6 +514,40 @@ public final class DialogCompat {
 
         public static Input bool(String key, String label) {
             return new Input(Type.BOOL, key, label, null, 0);
+        }
+
+        /** A checkbox that starts ticked or not. */
+        public static Input bool(String key, String label, boolean initial) {
+            Input input = new Input(Type.BOOL, key, label, null, 0);
+            input.boolInitial = initial;
+            return input;
+        }
+
+        /**
+         * A slider from {@code start} to {@code end}. Read the chosen value back with
+         * {@link Response#getFloat(String)}.
+         *
+         * @param step    the gap between values, or {@code null} for a smooth slider
+         * @param initial where it starts, or {@code null} for the middle
+         */
+        public static Input slider(String key, String label, float start, float end,
+                                   @Nullable Float step, @Nullable Float initial) {
+            return slider(key, label, start, end, step, initial, null);
+        }
+
+        /**
+         * A slider with a custom label, a translation-style format such as
+         * {@code "%s: %s blocks"} where the first {@code %s} is the label and the second the value.
+         */
+        public static Input slider(String key, String label, float start, float end,
+                                   @Nullable Float step, @Nullable Float initial, @Nullable String labelFormat) {
+            Input input = new Input(Type.RANGE, key, label, null, 0);
+            input.start = start;
+            input.end = end;
+            input.step = step;
+            input.rangeInitial = initial;
+            input.labelFormat = labelFormat;
+            return input;
         }
     }
 
