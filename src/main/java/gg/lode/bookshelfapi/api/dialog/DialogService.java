@@ -22,6 +22,7 @@ import com.github.retrooper.packetevents.protocol.dialog.input.BooleanInputContr
 import com.github.retrooper.packetevents.protocol.dialog.input.Input;
 import com.github.retrooper.packetevents.protocol.dialog.input.InputControl;
 import com.github.retrooper.packetevents.protocol.dialog.input.NumberRangeInputControl;
+import com.github.retrooper.packetevents.protocol.dialog.input.TextInputControl;
 import com.github.retrooper.packetevents.protocol.nbt.NBTCompound;
 import com.github.retrooper.packetevents.protocol.nbt.NBTString;
 import com.github.retrooper.packetevents.resources.ResourceLocation;
@@ -168,8 +169,10 @@ public final class DialogService {
             NumberRangeInputControl.RangeInfo range = new NumberRangeInputControl.RangeInfo(n.start(), n.end(), initial, step);
             control = new NumberRangeInputControl(n.width(), component(n.label()), n.labelFormat(), range);
         } else if (in.control() instanceof DialogModel.TextInput t) {
-            // TextInput / SingleOptionInput omitted on this pass — extend when needed.
-            control = new BooleanInputControl(component(t.label()), false, "true", "false");
+            TextInputControl.MultilineOptions multiline = t.maxLines() == null ? null
+                    : new TextInputControl.MultilineOptions(t.maxLines(), null);
+            control = new TextInputControl(t.width(), component(t.label()), t.labelVisible(),
+                    t.initial(), t.maxLength(), multiline);
         } else {
             throw new IllegalArgumentException("Unsupported input control: " + in.control().getClass());
         }
