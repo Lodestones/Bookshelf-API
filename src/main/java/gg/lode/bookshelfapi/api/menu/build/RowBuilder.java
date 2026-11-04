@@ -87,5 +87,15 @@ public class RowBuilder {
         public static Slot empty() {
             return new Slot(null, null, null);
         }
+
+        /**
+         * @return true if the menu placed something here: a real item, a click
+         * handler or a packet flag. AIR placeholders and untouched slots are not
+         * defined, so consumers that write into them directly keep working.
+         */
+        public boolean isDefined() {
+            boolean realItem = itemStack != null && !itemStack.getType().isAir();
+            return realItem || event != null || packet != null;
+        }
     }
 }

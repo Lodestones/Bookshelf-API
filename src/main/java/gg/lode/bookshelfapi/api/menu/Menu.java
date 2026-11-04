@@ -287,33 +287,37 @@ public abstract class Menu implements InventoryHolder {
     /**
      * @return true if the top slot was explicitly marked server-side (see
      * {@link RowBuilder#setServerSlot}). Clicks there pass through to Bukkit.
-     * Every other top slot is locked by the menu listener.
      */
     public boolean isServerSlot(int rawSlot) {
-        if (topMenuBuilder == null) return false;
-        int y = rawSlot / 9;
-        int x = rawSlot % 9;
-        RowBuilder[] rows = topMenuBuilder.getRowBuilders();
-        if (y < 0 || y >= rows.length) return false;
-        RowBuilder rb = rows[y];
-        if (rb == null) return false;
-        RowBuilder.Slot[] slots = rb.getSlots();
-        if (x < 0 || x >= slots.length) return false;
-        return Boolean.FALSE.equals(slots[x].packet());
+        RowBuilder.Slot slot = topSlotAt(rawSlot);
+        return slot != null && Boolean.FALSE.equals(slot.packet());
     }
 
     /**
-     * @return true if any top slot is explicitly server-side.
+     * @return true if the listener should cancel clicks and drags on this top
+     * slot. That is a slot the menu defined (item, handler or packet flag) and
+     * that is not server-side. Slots the menu never touched stay passthrough,
+     * so consumers that write into the top inventory directly keep working.
+     * A packet-based menu locks every non-server slot.
      */
-    public boolean hasAnyServerSlot() {
-        if (topMenuBuilder == null) return false;
-        for (RowBuilder rb : topMenuBuilder.getRowBuilders()) {
-            if (rb == null) continue;
-            for (RowBuilder.Slot s : rb.getSlots()) {
-                if (Boolean.FALSE.equals(s.packet())) return true;
-            }
-        }
-        return false;
+    public boolean isLockedTopSlot(int rawSlot) {
+        if (topMenuBuilder == null || isServerSlot(rawSlot)) return false;
+        if (topMenuBuilder.isPacketBased()) return true;
+        RowBuilder.Slot slot = topSlotAt(rawSlot);
+        return slot != null && slot.isDefined();
+    }
+
+    private @Nullable RowBuilder.Slot topSlotAt(int rawSlot) {
+        if (topMenuBuilder == null) return null;
+        int y = rawSlot / 9;
+        int x = rawSlot % 9;
+        RowBuilder[] rows = topMenuBuilder.getRowBuilders();
+        if (y < 0 || y >= rows.length) return null;
+        RowBuilder rb = rows[y];
+        if (rb == null) return null;
+        RowBuilder.Slot[] slots = rb.getSlots();
+        if (x < 0 || x >= slots.length) return null;
+        return slots[x];
     }
 
     private boolean isPacketSlot(RowBuilder.Slot slot) {

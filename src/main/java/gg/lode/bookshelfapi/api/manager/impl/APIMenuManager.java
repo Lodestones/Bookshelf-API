@@ -17,6 +17,7 @@ import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryView;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
 
@@ -109,9 +110,10 @@ public class APIMenuManager implements IMenuManager, Listener {
 
     /**
      * Last word on clicks into a Bookshelf menu. Runs after the consumer
-     * handlers so none of them can un-cancel a locked slot. Top slots are
-     * locked unless explicitly server-side, so a slot with no handler is no
-     * longer free to take.
+     * handlers so none of them can un-cancel a locked slot.
+     * <p>
+     * A stale view locks everything. For the live menu, only slots the menu
+     * defined are locked; untouched slots keep today's passthrough.
      */
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = false)
     public void guardClick(InventoryClickEvent event) {
@@ -130,22 +132,26 @@ public class APIMenuManager implements IMenuManager, Listener {
         if (raw < 0) return; // outside the window, only drops the cursor
 
         if (raw < top.getSize()) {
-            if (!menu.isServerSlot(raw)) event.setCancelled(true);
+            if (menu.isLockedTopSlot(raw)) event.setCancelled(true);
             return;
         }
 
-        // Bottom click. Only the moves that pull from or push into the menu.
+        // Bottom click. Only shift-click and collect-to-cursor reach into the
+        // top, and only matter when they would hit a locked slot holding a
+        // matching item.
         InventoryAction action = event.getAction();
-        if (action == InventoryAction.COLLECT_TO_CURSOR) {
-            event.setCancelled(true);
-        } else if (action == InventoryAction.MOVE_TO_OTHER_INVENTORY && !menu.hasAnyServerSlot()) {
-            event.setCancelled(true);
+        if (action == InventoryAction.MOVE_TO_OTHER_INVENTORY) {
+            if (touchesLockedSlot(menu, top, event.getCurrentItem())) event.setCancelled(true);
+        } else if (action == InventoryAction.COLLECT_TO_CURSOR) {
+            ItemStack cursor = event.getCursor();
+            ItemStack target = isEmpty(cursor) ? event.getCurrentItem() : cursor;
+            if (touchesLockedSlot(menu, top, target)) event.setCancelled(true);
         }
     }
 
     /**
-     * Drags are locked the same way: any touched top slot that is not
-     * server-side cancels the whole drag.
+     * Drags are locked the same way: any touched top slot that is locked
+     * cancels the whole drag.
      */
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = false)
     public void guardDrag(InventoryDragEvent event) {
@@ -162,11 +168,27 @@ public class APIMenuManager implements IMenuManager, Listener {
 
         int topSize = top.getSize();
         for (int raw : event.getRawSlots()) {
-            if (raw < topSize && !menu.isServerSlot(raw)) {
+            if (raw < topSize && menu.isLockedTopSlot(raw)) {
                 event.setCancelled(true);
                 return;
             }
         }
+    }
+
+    /**
+     * @return true if a locked top slot currently holds an item matching the
+     * one a shift-click or collect would move.
+     */
+    private boolean touchesLockedSlot(Menu menu, Inventory top, @Nullable ItemStack item) {
+        if (isEmpty(item)) return false;
+        for (int raw = 0; raw < top.getSize(); raw++) {
+            if (menu.isLockedTopSlot(raw) && item.isSimilar(top.getItem(raw))) return true;
+        }
+        return false;
+    }
+
+    private static boolean isEmpty(@Nullable ItemStack item) {
+        return item == null || item.getType().isAir();
     }
 
     /**
