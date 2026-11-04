@@ -5,6 +5,7 @@ import gg.lode.bookshelfapi.api.manager.IMenuManager;
 import gg.lode.bookshelfapi.api.menu.Menu;
 import gg.lode.bookshelfapi.api.menu.PacketMenuHandler;
 import gg.lode.bookshelfapi.api.menu.build.MenuBuilder;
+import gg.lode.bookshelfapi.api.menu.build.TopMenuBuilder;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -17,7 +18,6 @@ import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryView;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
 
@@ -112,8 +112,9 @@ public class APIMenuManager implements IMenuManager, Listener {
      * Last word on clicks into a Bookshelf menu. Runs after the consumer
      * handlers so none of them can un-cancel a locked slot.
      * <p>
-     * A stale view locks everything. For the live menu, only slots the menu
-     * defined are locked; untouched slots keep today's passthrough.
+     * A stale view (not this player's registered menu) locks everything and
+     * closes next tick. A live menu keeps the old passthrough, except packet
+     * menus: their top slots are fake, so every non-server slot stays locked.
      */
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = false)
     public void guardClick(InventoryClickEvent event) {
@@ -127,31 +128,27 @@ public class APIMenuManager implements IMenuManager, Listener {
             closeStale(player, top);
             return;
         }
+        if (!isPacketBased(menu)) return;
 
         int raw = event.getRawSlot();
         if (raw < 0) return; // outside the window, only drops the cursor
 
         if (raw < top.getSize()) {
-            if (menu.isLockedTopSlot(raw)) event.setCancelled(true);
+            if (!menu.isServerSlot(raw)) event.setCancelled(true);
             return;
         }
 
-        // Bottom click. Only shift-click and collect-to-cursor reach into the
-        // top, and only matter when they would hit a locked slot holding a
-        // matching item.
+        // Shift-click and collect-to-cursor can pull from or land in the
+        // packet top, so they are cancelled outright on packet menus.
         InventoryAction action = event.getAction();
-        if (action == InventoryAction.MOVE_TO_OTHER_INVENTORY) {
-            if (touchesLockedSlot(menu, top, event.getCurrentItem())) event.setCancelled(true);
-        } else if (action == InventoryAction.COLLECT_TO_CURSOR) {
-            ItemStack cursor = event.getCursor();
-            ItemStack target = isEmpty(cursor) ? event.getCurrentItem() : cursor;
-            if (touchesLockedSlot(menu, top, target)) event.setCancelled(true);
+        if (action == InventoryAction.MOVE_TO_OTHER_INVENTORY || action == InventoryAction.COLLECT_TO_CURSOR) {
+            event.setCancelled(true);
         }
     }
 
     /**
-     * Drags are locked the same way: any touched top slot that is locked
-     * cancels the whole drag.
+     * Drags follow the same rules: on a packet menu, a drag touching any
+     * non-server top slot is cancelled.
      */
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = false)
     public void guardDrag(InventoryDragEvent event) {
@@ -165,30 +162,20 @@ public class APIMenuManager implements IMenuManager, Listener {
             closeStale(player, top);
             return;
         }
+        if (!isPacketBased(menu)) return;
 
         int topSize = top.getSize();
         for (int raw : event.getRawSlots()) {
-            if (raw < topSize && menu.isLockedTopSlot(raw)) {
+            if (raw < topSize && !menu.isServerSlot(raw)) {
                 event.setCancelled(true);
                 return;
             }
         }
     }
 
-    /**
-     * @return true if a locked top slot currently holds an item matching the
-     * one a shift-click or collect would move.
-     */
-    private boolean touchesLockedSlot(Menu menu, Inventory top, @Nullable ItemStack item) {
-        if (isEmpty(item)) return false;
-        for (int raw = 0; raw < top.getSize(); raw++) {
-            if (menu.isLockedTopSlot(raw) && item.isSimilar(top.getItem(raw))) return true;
-        }
-        return false;
-    }
-
-    private static boolean isEmpty(@Nullable ItemStack item) {
-        return item == null || item.getType().isAir();
+    private static boolean isPacketBased(Menu menu) {
+        TopMenuBuilder builder = menu.getTopMenuBuilder();
+        return builder != null && builder.isPacketBased();
     }
 
     /**
@@ -250,13 +237,13 @@ public class APIMenuManager implements IMenuManager, Listener {
             return;
         }
         menu.markClosed();
+        // Drop the registration before anything else runs. Close actions may
+        // reopen this same instance, and that re-registration must survive.
+        activeMenus.remove(player.getUniqueId(), menu);
         if (packetMenuHandler != null && menu.requiresPacketHandler()) {
             packetMenuHandler.onClose(menu);
         }
         menu.getTopMenuBuilder().getCloseActions().forEach(closeEvent -> closeEvent.accept(event));
-        // Synchronous, and only drops this menu. Close actions may have opened
-        // another menu, and that one must stay registered.
-        activeMenus.remove(player.getUniqueId(), menu);
     }
 
     @EventHandler

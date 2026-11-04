@@ -293,20 +293,6 @@ public abstract class Menu implements InventoryHolder {
         return slot != null && Boolean.FALSE.equals(slot.packet());
     }
 
-    /**
-     * @return true if the listener should cancel clicks and drags on this top
-     * slot. That is a slot the menu defined (item, handler or packet flag) and
-     * that is not server-side. Slots the menu never touched stay passthrough,
-     * so consumers that write into the top inventory directly keep working.
-     * A packet-based menu locks every non-server slot.
-     */
-    public boolean isLockedTopSlot(int rawSlot) {
-        if (topMenuBuilder == null || isServerSlot(rawSlot)) return false;
-        if (topMenuBuilder.isPacketBased()) return true;
-        RowBuilder.Slot slot = topSlotAt(rawSlot);
-        return slot != null && slot.isDefined();
-    }
-
     private @Nullable RowBuilder.Slot topSlotAt(int rawSlot) {
         if (topMenuBuilder == null) return null;
         int y = rawSlot / 9;
