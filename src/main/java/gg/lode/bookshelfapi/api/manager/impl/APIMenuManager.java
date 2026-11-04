@@ -8,9 +8,12 @@ import gg.lode.bookshelfapi.api.menu.build.MenuBuilder;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryView;
@@ -104,6 +107,95 @@ public class APIMenuManager implements IMenuManager, Listener {
         }
     }
 
+    /**
+     * Last word on clicks into a Bookshelf menu. Runs after the consumer
+     * handlers so none of them can un-cancel a locked slot. Top slots are
+     * locked unless explicitly server-side, so a slot with no handler is no
+     * longer free to take.
+     */
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = false)
+    public void guardClick(InventoryClickEvent event) {
+        if (!(event.getWhoClicked() instanceof Player player)) return;
+        Inventory top = event.getView().getTopInventory();
+        Menu menu = resolveMenu(player, top);
+        if (menu == null) return;
+
+        if (!isActive(player, menu)) {
+            event.setCancelled(true);
+            closeStale(player, top);
+            return;
+        }
+
+        int raw = event.getRawSlot();
+        if (raw < 0) return; // outside the window, only drops the cursor
+
+        if (raw < top.getSize()) {
+            if (!menu.isServerSlot(raw)) event.setCancelled(true);
+            return;
+        }
+
+        // Bottom click. Only the moves that pull from or push into the menu.
+        InventoryAction action = event.getAction();
+        if (action == InventoryAction.COLLECT_TO_CURSOR) {
+            event.setCancelled(true);
+        } else if (action == InventoryAction.MOVE_TO_OTHER_INVENTORY && !menu.hasAnyServerSlot()) {
+            event.setCancelled(true);
+        }
+    }
+
+    /**
+     * Drags are locked the same way: any touched top slot that is not
+     * server-side cancels the whole drag.
+     */
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = false)
+    public void guardDrag(InventoryDragEvent event) {
+        if (!(event.getWhoClicked() instanceof Player player)) return;
+        Inventory top = event.getView().getTopInventory();
+        Menu menu = resolveMenu(player, top);
+        if (menu == null) return;
+
+        if (!isActive(player, menu)) {
+            event.setCancelled(true);
+            closeStale(player, top);
+            return;
+        }
+
+        int topSize = top.getSize();
+        for (int raw : event.getRawSlots()) {
+            if (raw < topSize && !menu.isServerSlot(raw)) {
+                event.setCancelled(true);
+                return;
+            }
+        }
+    }
+
+    /**
+     * Find the Bookshelf menu behind an open top inventory. The holder is the
+     * source of truth; the registry only backs up inventories built outside
+     * Menu.init.
+     */
+    private @Nullable Menu resolveMenu(Player player, Inventory top) {
+        if (top.getHolder() instanceof Menu holder) return holder;
+        Menu active = activeMenus.get(player.getUniqueId());
+        return active != null && top.equals(active.getInventory()) ? active : null;
+    }
+
+    private boolean isActive(Player player, Menu menu) {
+        return activeMenus.get(player.getUniqueId()) == menu;
+    }
+
+    /**
+     * A menu view with no live registration. Cancel the click and close the
+     * view on the next tick, unless the player has already moved on.
+     */
+    private void closeStale(Player player, Inventory top) {
+        Task.later(plugin, () -> {
+            if (player.isOnline() && top.equals(player.getOpenInventory().getTopInventory())) {
+                player.closeInventory();
+            }
+        }, 1L);
+    }
+
     @Override
     public void setPacketMenuHandler(@Nullable PacketMenuHandler handler) {
         this.packetMenuHandler = handler;
@@ -130,22 +222,28 @@ public class APIMenuManager implements IMenuManager, Listener {
             return;
         }
         Menu menu = activeMenus.get(player.getUniqueId());
-        if (menu == null) {
+        // Only the view that is the active menu. A stale view closing must not
+        // tear down the menu that replaced it.
+        if (menu == null || !event.getInventory().equals(menu.getInventory())) {
             return;
         }
-        menu.getTopMenuBuilder().getCloseActions().forEach(closeEvent -> closeEvent.accept(event));
-        if (packetMenuHandler != null && menu.getTopMenuBuilder().isPacketBased()) {
+        menu.markClosed();
+        if (packetMenuHandler != null && menu.requiresPacketHandler()) {
             packetMenuHandler.onClose(menu);
         }
-        Task.later(this.plugin, () -> activeMenus.remove(player.getUniqueId()), 1L);
+        menu.getTopMenuBuilder().getCloseActions().forEach(closeEvent -> closeEvent.accept(event));
+        // Synchronous, and only drops this menu. Close actions may have opened
+        // another menu, and that one must stay registered.
+        activeMenus.remove(player.getUniqueId(), menu);
     }
 
     @EventHandler
     public void on(PlayerQuitEvent event) {
-        Menu menu = activeMenus.get(event.getPlayer().getUniqueId());
-        if (menu != null && packetMenuHandler != null && menu.getTopMenuBuilder().isPacketBased()) {
+        Menu menu = activeMenus.remove(event.getPlayer().getUniqueId());
+        if (menu == null) return;
+        menu.markClosed();
+        if (packetMenuHandler != null && menu.requiresPacketHandler()) {
             packetMenuHandler.onClose(menu);
         }
-        activeMenus.remove(event.getPlayer().getUniqueId());
     }
 }

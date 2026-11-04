@@ -61,6 +61,9 @@ public abstract class Menu implements InventoryHolder {
     private MenuBuilder bottomMenuBuilder;
     protected Component title;
     protected final Player player;
+    // True from open() until the close event. Refresh paths check it so a
+    // timer never pushes packets for a menu the player has already left.
+    private boolean shown;
 
     public Menu(Player player) {
         this.player = player;
@@ -70,8 +73,10 @@ public abstract class Menu implements InventoryHolder {
         this.topMenuBuilder = this.getTopMenuBuilder(new TopMenuBuilder());
         final int rows = this.topMenuBuilder.getRows();
 
+        // Menu is the holder so the listener can tell a Bookshelf view from
+        // any other inventory without trusting the per-player registry.
         if (this.inventory == null)
-            this.inventory = Bukkit.createInventory(null, rows * 9, this.topMenuBuilder.getTitle());
+            this.inventory = Bukkit.createInventory(this, rows * 9, this.topMenuBuilder.getTitle());
 
         this.title = this.topMenuBuilder.getTitle();
 
@@ -169,7 +174,26 @@ public abstract class Menu implements InventoryHolder {
 
     public void setTitle(String str, VariableContext context) {
         this.title = MiniMessageHelper.deserialize(str, context);
-        TitleUpdater.update(player, this.title);
+        // TitleUpdater re-sends OpenScreen for whatever the player has open, so
+        // only push when this menu is the one showing.
+        if (isShowing()) TitleUpdater.update(player, this.title);
+    }
+
+    /**
+     * @return true if this menu is the view the player has open right now.
+     * False once the close event has run, or if another inventory took over.
+     */
+    public boolean isShowing() {
+        if (!shown || player == null || !player.isOnline()) return false;
+        return player.getOpenInventory().getTopInventory().equals(this.inventory);
+    }
+
+    /**
+     * Called by the menu manager when the close event for this menu runs. Not
+     * for consumers.
+     */
+    public void markClosed() {
+        this.shown = false;
     }
 
     public void open() {
@@ -180,6 +204,7 @@ public abstract class Menu implements InventoryHolder {
 
         topMenuBuilder.getOpenActions().forEach(Runnable::run);
         menuManager.register(player.getUniqueId(), this);
+        this.shown = true;
 
         PacketMenuHandler handler = menuManager.getPacketMenuHandler();
 
@@ -257,6 +282,38 @@ public abstract class Menu implements InventoryHolder {
         if (x < 0 || x >= slots.length) return null;
         RowBuilder.Slot slot = slots[x];
         return isPacketSlot(slot) ? slot.itemStack() : null;
+    }
+
+    /**
+     * @return true if the top slot was explicitly marked server-side (see
+     * {@link RowBuilder#setServerSlot}). Clicks there pass through to Bukkit.
+     * Every other top slot is locked by the menu listener.
+     */
+    public boolean isServerSlot(int rawSlot) {
+        if (topMenuBuilder == null) return false;
+        int y = rawSlot / 9;
+        int x = rawSlot % 9;
+        RowBuilder[] rows = topMenuBuilder.getRowBuilders();
+        if (y < 0 || y >= rows.length) return false;
+        RowBuilder rb = rows[y];
+        if (rb == null) return false;
+        RowBuilder.Slot[] slots = rb.getSlots();
+        if (x < 0 || x >= slots.length) return false;
+        return Boolean.FALSE.equals(slots[x].packet());
+    }
+
+    /**
+     * @return true if any top slot is explicitly server-side.
+     */
+    public boolean hasAnyServerSlot() {
+        if (topMenuBuilder == null) return false;
+        for (RowBuilder rb : topMenuBuilder.getRowBuilders()) {
+            if (rb == null) continue;
+            for (RowBuilder.Slot s : rb.getSlots()) {
+                if (Boolean.FALSE.equals(s.packet())) return true;
+            }
+        }
+        return false;
     }
 
     private boolean isPacketSlot(RowBuilder.Slot slot) {
