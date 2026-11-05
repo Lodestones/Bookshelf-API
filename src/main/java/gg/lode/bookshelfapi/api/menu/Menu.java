@@ -8,8 +8,10 @@ import gg.lode.bookshelfapi.api.menu.build.RowBuilder;
 import gg.lode.bookshelfapi.api.menu.build.TopMenuBuilder;
 import gg.lode.bookshelfapi.api.util.MiniMessageHelper;
 import gg.lode.bookshelfapi.api.util.VariableContext;
-import net.infumia.titleupdater.TitleUpdater;
+import net.infumia.titleupdater.versions.NmsV1_21_6;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -174,9 +176,29 @@ public abstract class Menu implements InventoryHolder {
 
     public void setTitle(String str, VariableContext context) {
         this.title = MiniMessageHelper.deserialize(str, context);
-        // TitleUpdater re-sends OpenScreen for whatever the player has open, so
-        // only push when this menu is the one showing.
-        if (isShowing()) TitleUpdater.update(player, this.title);
+        // The re-sent OpenScreen applies to whatever the player has open, so only
+        // push when this menu is the one showing.
+        if (isShowing()) pushTitle(player, this.title);
+    }
+
+    private static boolean nmsTitleBroken;
+
+    // Goes straight to title-updater's 1.21.6 implementation, the oldest version
+    // Bookshelf supports. Its own version lookup misreads 1.21.10+ as 1.21.1 and
+    // can't parse 26.x at all, and with another plugin shading an older copy that
+    // lookup resolves to their class and fails the cast. If NMS ever moves out from
+    // under it, fall back to Bukkit's title setter, which drops custom fonts.
+    private static void pushTitle(Player player, Component title) {
+        if (!nmsTitleBroken) {
+            try {
+                NmsV1_21_6.INSTANCE.updateTitle(player, GsonComponentSerializer.gson().serializeToTree(title));
+                return;
+            } catch (LinkageError | RuntimeException e) {
+                nmsTitleBroken = true;
+                Bukkit.getLogger().warning("[Bookshelf] Menu title updates fell back to the Bukkit API: " + e);
+            }
+        }
+        player.getOpenInventory().setTitle(LegacyComponentSerializer.legacySection().serialize(title));
     }
 
     /**
